@@ -1,6 +1,7 @@
 #define CLAY_IMPLEMENTATION
 #include "clay.h"
 #include "clay_renderer_raylib.c"
+#include "calendar.h"
 
 const uint32_t FONT_ID_BODY_24 = 0;
 
@@ -17,7 +18,9 @@ Clay_RenderCommandArray CreateLayout(void) {
                                                .height = CLAY_SIZING_GROW(0)},
                                 },
                             .backgroundColor = {240, 240, 240, 255},
-                        }) {}
+                        }) {
+    Calendar_Render(FONT_ID_BODY_24);
+  }
   return Clay_EndLayout();
 }
 
