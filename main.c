@@ -5,44 +5,56 @@
 const uint32_t FONT_ID_BODY_24 = 0;
 
 void HandleClayErrors(Clay_ErrorData errorData) {
-    printf("%s", errorData.errorText.chars);
+  printf("%s", errorData.errorText.chars);
 }
 
 Clay_RenderCommandArray CreateLayout(void) {
-    Clay_BeginLayout();
-    CLAY(CLAY_ID("Root"), {
-        .layout = {
-            .sizing = { .width = CLAY_SIZING_GROW(0), .height = CLAY_SIZING_GROW(0) },
-        },
-        .backgroundColor = {240, 240, 240, 255},
-    }) {}
-    return Clay_EndLayout();
+  Clay_BeginLayout();
+  CLAY(CLAY_ID("Root"), {
+                            .layout =
+                                {
+                                    .sizing = {.width = CLAY_SIZING_GROW(0),
+                                               .height = CLAY_SIZING_GROW(0)},
+                                },
+                            .backgroundColor = {240, 240, 240, 255},
+                        }) {}
+  return Clay_EndLayout();
 }
 
 int main(void) {
-    uint64_t totalMemorySize = Clay_MinMemorySize();
-    Clay_Arena clayMemory = Clay_CreateArenaWithCapacityAndMemory(totalMemorySize, malloc(totalMemorySize));
-    Clay_Initialize(clayMemory, (Clay_Dimensions) { 1024, 768 }, (Clay_ErrorHandler) { HandleClayErrors, 0 });
-    Clay_Raylib_Initialize(1024, 768, "Calendar", FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
+  uint64_t totalMemorySize = Clay_MinMemorySize();
+  Clay_Arena clayMemory = Clay_CreateArenaWithCapacityAndMemory(
+      totalMemorySize, malloc(totalMemorySize));
+  Clay_Initialize(clayMemory, (Clay_Dimensions){1024, 768},
+                  (Clay_ErrorHandler){HandleClayErrors, 0});
+  Clay_Raylib_Initialize(1024, 768, "Calendar",
+                         FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE |
+                             FLAG_MSAA_4X_HINT);
 
-    Font fonts[1];
-    fonts[FONT_ID_BODY_24] = LoadFontEx("resources/Roboto-Regular.ttf", 48, 0, 400);
-    SetTextureFilter(fonts[FONT_ID_BODY_24].texture, TEXTURE_FILTER_BILINEAR);
-    Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts);
+  Font fonts[1];
+  fonts[FONT_ID_BODY_24] =
+      LoadFontEx("resources/Roboto-Regular.ttf", 48, 0, 400);
+  SetTextureFilter(fonts[FONT_ID_BODY_24].texture, TEXTURE_FILTER_BILINEAR);
+  Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts);
 
-    while (!WindowShouldClose()) {
-        Clay_SetPointerState((Clay_Vector2) { GetMousePosition().x, GetMousePosition().y }, IsMouseButtonDown(0));
-        Clay_SetLayoutDimensions((Clay_Dimensions) { (float)GetScreenWidth(), (float)GetScreenHeight() });
-        Clay_UpdateScrollContainers(true, (Clay_Vector2) { GetMouseWheelMoveV().x, GetMouseWheelMoveV().y }, GetFrameTime());
+  while (!WindowShouldClose()) {
+    Clay_SetPointerState(
+        (Clay_Vector2){GetMousePosition().x, GetMousePosition().y},
+        IsMouseButtonDown(0));
+    Clay_SetLayoutDimensions(
+        (Clay_Dimensions){(float)GetScreenWidth(), (float)GetScreenHeight()});
+    Clay_UpdateScrollContainers(
+        true, (Clay_Vector2){GetMouseWheelMoveV().x, GetMouseWheelMoveV().y},
+        GetFrameTime());
 
-        Clay_RenderCommandArray renderCommands = CreateLayout();
+    Clay_RenderCommandArray renderCommands = CreateLayout();
 
-        BeginDrawing();
-        ClearBackground(BLACK);
-        Clay_Raylib_Render(renderCommands, fonts);
-        EndDrawing();
-    }
+    BeginDrawing();
+    ClearBackground(BLACK);
+    Clay_Raylib_Render(renderCommands, fonts);
+    EndDrawing();
+  }
 
-    Clay_Raylib_Close();
-    return 0;
+  Clay_Raylib_Close();
+  return 0;
 }
