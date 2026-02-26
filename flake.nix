@@ -18,6 +18,7 @@
           src = ./.;
 
           nativeBuildInputs = with pkgs; [
+            cmake
             pkg-config
           ];
 
@@ -39,12 +40,6 @@
             darwin.apple_sdk.frameworks.CoreVideo
           ];
 
-          buildPhase = ''
-            cc -O2 -o fella main.c \
-              $(pkg-config --cflags --libs raylib) \
-              -lm -lpthread -ldl
-          '';
-
           installPhase = ''
             mkdir -p $out/bin $out/share/fella
             cp fella $out/bin/
@@ -54,13 +49,13 @@
 
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
+            cmake
             pkg-config
           ];
 
           buildInputs = with pkgs; [
             # C toolchain
             gcc
-            gnumake
             gdb
             valgrind
             clang-tools
@@ -89,9 +84,9 @@
 
           shellHook = ''
             echo "fella dev shell"
-            echo "  build:  make"
-            echo "  run:    make run"
-            echo "  clean:  make clean"
+            echo "  configure:  cmake -B build"
+            echo "  build:      cmake --build build"
+            echo "  run:        ./build/fella"
           '';
         };
       }
