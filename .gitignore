@@ -4,3 +4,4 @@ result
 *.o
 *.d
 .direnv
+.cache/

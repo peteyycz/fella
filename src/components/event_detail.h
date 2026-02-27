@@ -44,7 +44,7 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
                    .layoutDirection = CLAY_TOP_TO_BOTTOM,
                },
            .backgroundColor = cal_white,
-           .cornerRadius = CLAY_CORNER_RADIUS(12),
+
            .border = {.color = cal_borderGray, .width = CLAY_BORDER_ALL(1)},
            .floating =
                {
@@ -66,7 +66,7 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
                                 .height = CLAY_SIZING_FIXED(6)},
                  },
              .backgroundColor = calColor,
-             .cornerRadius = {12, 12, 0, 0},
+
          }) {}
 
     // Content area
@@ -160,7 +160,7 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
                                     .height = CLAY_SIZING_FIXED(10)},
                      },
                  .backgroundColor = calColor,
-                 .cornerRadius = CLAY_CORNER_RADIUS(5),
+
              }) {}
         CLAY_TEXT(cal_make_string(calName), CLAY_TEXT_CONFIG({
                                      .fontId    = fontId,

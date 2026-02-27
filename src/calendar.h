@@ -266,7 +266,7 @@ static void Calendar_Render(uint32_t fontId) {
                .backgroundColor = Clay_Hovered()
                                       ? (Clay_Color){232, 232, 232, 255}
                                       : (Clay_Color){0, 0, 0, 0},
-               .cornerRadius = CLAY_CORNER_RADIUS(4),
+
            }) {
         for (int bar = 0; bar < 3; bar++) {
           CLAY(CLAY_IDI("HamburgerBar", bar),
@@ -277,7 +277,7 @@ static void Calendar_Render(uint32_t fontId) {
                                       .height = CLAY_SIZING_FIXED(3)},
                        },
                    .backgroundColor = {60, 64, 67, 255},
-                   .cornerRadius = CLAY_CORNER_RADIUS(1),
+
                }) {}
         }
       }
@@ -322,7 +322,7 @@ static void Calendar_Render(uint32_t fontId) {
                                                 .y = CLAY_ALIGN_Y_CENTER},
                          },
                      .backgroundColor = cal_todayBlue,
-                     .cornerRadius = CLAY_CORNER_RADIUS(18),
+
                  }) {
               CLAY_TEXT(dayNum, CLAY_TEXT_CONFIG({
                                     .fontId    = fontId,
@@ -393,7 +393,7 @@ static void Calendar_Render(uint32_t fontId) {
                              .padding = {4, 4, 0, 0},
                          },
                      .backgroundColor = ec.bg,
-                     .cornerRadius = CLAY_CORNER_RADIUS(3),
+
                  }) {
               CLAY_TEXT(title, CLAY_TEXT_CONFIG({
                                    .fontId    = fontId,
@@ -541,7 +541,7 @@ static void Calendar_Render(uint32_t fontId) {
                                .childGap = 2,
                            },
                        .backgroundColor = ec.bg,
-                       .cornerRadius = CLAY_CORNER_RADIUS(4),
+        
                        .floating =
                            {
                                .attachTo      = CLAY_ATTACH_TO_ELEMENT_WITH_ID,
@@ -589,7 +589,6 @@ static void Calendar_Render(uint32_t fontId) {
                                           .height = CLAY_SIZING_FIXED(12)},
                            },
                        .backgroundColor = cal_redLine,
-                       .cornerRadius = CLAY_CORNER_RADIUS(6),
                        .floating =
                            {
                                .attachTo = CLAY_ATTACH_TO_PARENT,

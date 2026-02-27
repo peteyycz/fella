@@ -21,7 +21,7 @@ static void CalendarRow(int ci, uint32_t fontId) {
            .backgroundColor = Clay_Hovered()
                                   ? (Clay_Color){232, 240, 254, 255}
                                   : (Clay_Color){0, 0, 0, 0},
-           .cornerRadius = CLAY_CORNER_RADIUS(4),
+
        }) {
     CalendarCheckbox(ci, vis, calColor);
 
