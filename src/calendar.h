@@ -22,7 +22,7 @@ static const char *HOUR_LABELS[] = {
 #define CAL_ALLDAY_HEIGHT 48.0f
 #define CAL_GRID_TOTAL_HEIGHT (24.0f * CAL_HOUR_HEIGHT)
 
-// ── Event colors (neobrutalist palette) ──────────────────────────────────────
+// ── Event colors ─────────────────────────────────────────────────────────────
 // colorId -> background + text color pairs
 typedef struct {
   Clay_Color bg;
@@ -89,6 +89,11 @@ static int timed_event_col(time_t t, struct tm *week_days_tm) {
 static float timed_event_hour(time_t t) {
   struct tm lt = *localtime(&t);
   return (float)lt.tm_hour + (float)lt.tm_min / 60.0f + (float)lt.tm_sec / 3600.0f;
+}
+
+// Transparent background variant for event blocks (~15% opacity)
+static Clay_Color cal_event_bg(Clay_Color c) {
+    return (Clay_Color){c.r, c.g, c.b, 38};
 }
 
 // ── Component functions ──────────────────────────────────────────────────────
@@ -293,7 +298,7 @@ static void Calendar_Render(uint32_t fontId) {
                                 .height = CLAY_SIZING_FIXED(CAL_HEADER_HEIGHT)},
                  },
              .backgroundColor = cal_cream,
-             .border = {.color = cal_borderColor, .width = {.bottom = 3}},
+             .border = {.color = cal_borderColor, .width = {.bottom = 1}},
              .floating =
                  {
                      .attachTo = CLAY_ATTACH_TO_PARENT,
@@ -315,7 +320,7 @@ static void Calendar_Render(uint32_t fontId) {
                        .childGap = 4,
                    },
                .backgroundColor = Clay_Hovered()
-                                      ? cal_hoverYellow
+                                      ? cal_hoverBg
                                       : (Clay_Color){0, 0, 0, 0},
 
            }) {
@@ -350,7 +355,7 @@ static void Calendar_Render(uint32_t fontId) {
                                             .y = CLAY_ALIGN_Y_CENTER},
                          .childGap = 2,
                      },
-                 .border = {.color = cal_borderColor, .width = {.left = 2}},
+                 .border = {.color = cal_borderColor, .width = {.left = 1}},
              }) {
 
           // Day name (e.g. "Mon")
@@ -363,26 +368,6 @@ static void Calendar_Render(uint32_t fontId) {
 
           // Day number — blue circle if today
           if (isToday[i]) {
-            // Today square shadow
-            CLAY(CLAY_IDI("TodayShadow", i),
-                 {
-                     .layout =
-                         {
-                             .sizing = {.width  = CLAY_SIZING_FIXED(48),
-                                        .height = CLAY_SIZING_FIXED(48)},
-                         },
-                     .backgroundColor = cal_shadowColor,
-                     .floating =
-                         {
-                             .attachTo      = CLAY_ATTACH_TO_ELEMENT_WITH_ID,
-                             .parentId      = Clay_GetElementIdWithIndex(CLAY_STRING("TodayCircle"), (uint32_t)i).id,
-                             .attachPoints  = {.element = CLAY_ATTACH_POINT_LEFT_TOP,
-                                               .parent  = CLAY_ATTACH_POINT_LEFT_TOP},
-                             .offset        = {2, 2},
-                             .zIndex        = 0,
-                             .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
-                         },
-                 }) {}
             CLAY(CLAY_IDI("TodayCircle", i),
                  {
                      .layout =
@@ -393,6 +378,7 @@ static void Calendar_Render(uint32_t fontId) {
                                                 .y = CLAY_ALIGN_Y_CENTER},
                          },
                      .backgroundColor = cal_accentBlue,
+                     .cornerRadius = CLAY_CORNER_RADIUS(24),
 
                  }) {
               CLAY_TEXT(dayNum, CLAY_TEXT_CONFIG({
@@ -421,7 +407,7 @@ static void Calendar_Render(uint32_t fontId) {
                                 .height = CLAY_SIZING_FIT(CAL_ALLDAY_HEIGHT)},
                  },
              .backgroundColor = cal_cream,
-             .border = {.color = cal_borderColor, .width = {.bottom = 3}},
+             .border = {.color = cal_borderColor, .width = {.bottom = 1}},
              .floating =
                  {
                      .attachTo = CLAY_ATTACH_TO_PARENT,
@@ -465,7 +451,7 @@ static void Calendar_Render(uint32_t fontId) {
                            .padding = {2, 2, 2, 2},
                        },
                    .clip = {.horizontal = true},
-                   .border = {.color = cal_borderColor, .width = {.left = 2}},
+                   .border = {.color = cal_borderColor, .width = {.left = 1}},
                }) {
             for (int ae = 0; ae < alldayEventCount[i]; ae++) {
               const CalEvent *ev = &g_events[alldayEvents[i][ae]];
@@ -482,14 +468,15 @@ static void Calendar_Render(uint32_t fontId) {
                                .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
                                .padding = {4, 4, 0, 0},
                            },
-                       .backgroundColor = ec.bg,
-                       .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(2)},
+                       .backgroundColor = cal_event_bg(ec.bg),
+                       .border = {.color = ec.bg, .width = {.left = 3}},
+                       .cornerRadius = CLAY_CORNER_RADIUS(4),
 
                    }) {
                 CLAY_TEXT(title, CLAY_TEXT_CONFIG({
                                      .fontId    = fontId,
                                      .fontSize  = 22,
-                                     .textColor = ec.text,
+                                     .textColor = cal_primaryText,
                                  }));
               }
             }
@@ -575,7 +562,7 @@ static void Calendar_Render(uint32_t fontId) {
                              .layoutDirection = CLAY_TOP_TO_BOTTOM,
                          },
                      .backgroundColor = colBg,
-                     .border = {.color = cal_borderColor, .width = {.left = 2}},
+                     .border = {.color = cal_borderColor, .width = {.left = 1}},
                  }) {
               // 24 hour slots
               for (int h = 0; h < 24; h++) {
@@ -631,8 +618,9 @@ static void Calendar_Render(uint32_t fontId) {
                                .padding = {4, 4, 4, 4},
                                .childGap = 2,
                            },
-                       .backgroundColor = ec.bg,
-                       .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(2)},
+                       .backgroundColor = cal_event_bg(ec.bg),
+                       .border = {.color = ec.bg, .width = {.left = 3}},
+                       .cornerRadius = CLAY_CORNER_RADIUS(6),
                        .floating =
                            {
                                .attachTo      = CLAY_ATTACH_TO_ELEMENT_WITH_ID,
@@ -647,7 +635,7 @@ static void Calendar_Render(uint32_t fontId) {
                 CLAY_TEXT(title, CLAY_TEXT_CONFIG({
                                      .fontId    = fontId,
                                      .fontSize  = 24,
-                                     .textColor = ec.text,
+                                     .textColor = cal_primaryText,
                                  }));
               }
             }
@@ -714,27 +702,6 @@ static void Calendar_Render(uint32_t fontId) {
                  },
          }) {}
 
-    // Sidebar shadow
-    CLAY(CLAY_ID("SidebarShadow"),
-         {
-             .layout =
-                 {
-                     .sizing = {.width  = CLAY_SIZING_FIXED(340),
-                                .height = CLAY_SIZING_GROW(0)},
-                 },
-             .backgroundColor = cal_shadowColor,
-             .floating =
-                 {
-                     .attachTo      = CLAY_ATTACH_TO_ELEMENT_WITH_ID,
-                     .parentId      = Clay_GetElementId(CLAY_STRING("SidebarPanel")).id,
-                     .attachPoints  = {.element = CLAY_ATTACH_POINT_LEFT_TOP,
-                                       .parent  = CLAY_ATTACH_POINT_LEFT_TOP},
-                     .offset        = {4, 4},
-                     .zIndex        = 100,
-                     .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
-                 },
-         }) {}
-
     // Sidebar panel
     CLAY(CLAY_ID("SidebarPanel"),
          {
@@ -746,7 +713,7 @@ static void Calendar_Render(uint32_t fontId) {
                      .padding = {0, 0, 8, 8},
                  },
              .backgroundColor = cal_cream,
-             .border = {.color = cal_borderColor, .width = {.right = 3}},
+             .border = {.color = cal_borderColor, .width = {.right = 1}},
              .floating =
                  {
                      .attachTo     = CLAY_ATTACH_TO_ROOT,
@@ -786,7 +753,7 @@ static void Calendar_Render(uint32_t fontId) {
                .layout =
                    {
                        .sizing = {.width  = CLAY_SIZING_GROW(0),
-                                  .height = CLAY_SIZING_FIXED(2)},
+                                  .height = CLAY_SIZING_FIXED(1)},
                    },
                .backgroundColor = cal_borderColor,
            }) {}

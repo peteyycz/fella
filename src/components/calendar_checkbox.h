@@ -16,7 +16,8 @@ static void CalendarCheckbox(int ci, bool visible, Clay_Color calColor) {
                                         .y = CLAY_ALIGN_Y_CENTER},
                  },
              .backgroundColor = calColor,
-             .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(2)},
+             .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(1)},
+             .cornerRadius = CLAY_CORNER_RADIUS(4),
 
          }) {
       CLAY(CLAY_IDI("CalCheckInner", ci),
@@ -27,6 +28,7 @@ static void CalendarCheckbox(int ci, bool visible, Clay_Color calColor) {
                                   .height = CLAY_SIZING_FIXED(8)},
                    },
                .backgroundColor = cal_cream,
+               .cornerRadius = CLAY_CORNER_RADIUS(2),
 
            }) {}
     }
@@ -39,7 +41,8 @@ static void CalendarCheckbox(int ci, bool visible, Clay_Color calColor) {
                      .sizing = {.width  = CLAY_SIZING_FIXED(18),
                                 .height = CLAY_SIZING_FIXED(18)},
                  },
-             .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(2)},
+             .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(1)},
+             .cornerRadius = CLAY_CORNER_RADIUS(4),
 
          }) {}
   }

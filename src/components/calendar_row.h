@@ -19,7 +19,7 @@ static void CalendarRow(int ci, uint32_t fontId) {
                    .childGap = 10,
                },
            .backgroundColor = Clay_Hovered()
-                                  ? cal_hoverYellow
+                                  ? cal_hoverBg
                                   : (Clay_Color){0, 0, 0, 0},
            .border = {.color = cal_borderColor, .width = {.bottom = 1}},
 

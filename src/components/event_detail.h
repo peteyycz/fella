@@ -35,27 +35,6 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
       ? (Clay_Vector2){4, 0}
       : (Clay_Vector2){-4, 0};
 
-  // Event detail shadow
-  CLAY(CLAY_ID("EvtDetailShadow"),
-       {
-           .layout =
-               {
-                   .sizing = {.width  = CLAY_SIZING_FIXED(360),
-                              .height = CLAY_SIZING_FIT(0)},
-               },
-           .backgroundColor = cal_shadowColor,
-           .floating =
-               {
-                   .attachTo      = CLAY_ATTACH_TO_ELEMENT_WITH_ID,
-                   .parentId      = Clay_GetElementId(CLAY_STRING("EvtDetailCard")).id,
-                   .attachPoints  = {.element = CLAY_ATTACH_POINT_LEFT_TOP,
-                                     .parent  = CLAY_ATTACH_POINT_LEFT_TOP},
-                   .offset        = {4, 4},
-                   .zIndex        = 299,
-                   .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
-               },
-       }) {}
-
   CLAY(CLAY_ID("EvtDetailCard"),
        {
            .layout =
@@ -65,8 +44,8 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
                    .layoutDirection = CLAY_TOP_TO_BOTTOM,
                },
            .backgroundColor = cal_cream,
-
-           .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(3)},
+           .cornerRadius = CLAY_CORNER_RADIUS(12),
+           .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(1)},
            .floating =
                {
                    .attachTo      = CLAY_ATTACH_TO_ELEMENT_WITH_ID,
@@ -157,7 +136,7 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
                .layout =
                    {
                        .sizing = {.width  = CLAY_SIZING_GROW(0),
-                                  .height = CLAY_SIZING_FIXED(2)},
+                                  .height = CLAY_SIZING_FIXED(1)},
                    },
                .backgroundColor = cal_borderColor,
            }) {}
@@ -181,6 +160,7 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
                                     .height = CLAY_SIZING_FIXED(12)},
                      },
                  .backgroundColor = calColor,
+                 .cornerRadius = CLAY_CORNER_RADIUS(6),
                  .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(1)},
 
              }) {}

@@ -23,7 +23,7 @@ Clay_RenderCommandArray CreateLayout(void) {
                                     .sizing = {.width = CLAY_SIZING_GROW(0),
                                                .height = CLAY_SIZING_GROW(0)},
                                 },
-                            .backgroundColor = {245, 235, 220, 255},
+                            .backgroundColor = {252, 250, 245, 255},
                         }) {
     Calendar_Render(FONT_ID_BODY_24);
   }
@@ -45,7 +45,7 @@ int main(void) {
 
   Font fonts[1];
   fonts[FONT_ID_BODY_24] =
-      LoadFontEx("resources/SpaceMono-Bold.ttf", 48, 0, 400);
+      LoadFontEx("resources/Inter-Regular.ttf", 48, 0, 400);
   SetTextureFilter(fonts[FONT_ID_BODY_24].texture, TEXTURE_FILTER_BILINEAR);
   Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts);
 

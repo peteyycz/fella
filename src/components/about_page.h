@@ -27,7 +27,7 @@ static void AboutPage_Render(uint32_t fontId) {
                      .childGap = 16,
                  },
              .backgroundColor = cal_cream,
-             .border = {.color = cal_borderColor, .width = {.bottom = 3}},
+             .border = {.color = cal_borderColor, .width = {.bottom = 1}},
          }) {
       CLAY(CLAY_ID("AboutBackBtn"),
            {
@@ -39,9 +39,10 @@ static void AboutPage_Render(uint32_t fontId) {
                                           .y = CLAY_ALIGN_Y_CENTER},
                    },
                .backgroundColor = Clay_Hovered()
-                                      ? cal_hoverYellow
+                                      ? cal_hoverBg
                                       : (Clay_Color){0, 0, 0, 0},
-               .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(2)},
+               .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(1)},
+               .cornerRadius = CLAY_CORNER_RADIUS(8),
            }) {
         CLAY_TEXT(CLAY_STRING("<"), CLAY_TEXT_CONFIG({
                                         .fontId = fontId,
@@ -75,7 +76,7 @@ static void AboutPage_Render(uint32_t fontId) {
                     .textColor = cal_primaryText,
                 }));
       CLAY_TEXT(
-          CLAY_STRING("A neobrutalist calendar app built with Clay and Raylib."),
+          CLAY_STRING("A calendar app built with Clay and Raylib."),
           CLAY_TEXT_CONFIG({
               .fontId = fontId,
               .fontSize = 18,

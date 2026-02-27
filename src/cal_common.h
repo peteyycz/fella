@@ -6,16 +6,24 @@
 
 #include <string.h>
 
-// ── Color constants (neobrutalist palette) ───────────────────────────────────
-static const Clay_Color cal_borderColor   = {30,  30,  30,  255};
-static const Clay_Color cal_primaryText   = {20,  20,  20,  255};
-static const Clay_Color cal_secondaryText = {60,  60,  60,  255};
-static const Clay_Color cal_accentBlue    = {0,   100, 255, 255};
-static const Clay_Color cal_todayTint     = {210, 230, 255, 255};
-static const Clay_Color cal_redLine       = {255, 50,  50,  255};
-static const Clay_Color cal_cream         = {255, 250, 240, 255};
-static const Clay_Color cal_hoverYellow   = {255, 230, 0,   255};
-static const Clay_Color cal_shadowColor   = {30,  30,  30,  255};
+// ── Color constants (clean business palette) ─────────────────────────────────
+static const Clay_Color cal_borderColor   = {215, 215, 220, 255};
+static const Clay_Color cal_primaryText   = {32,  33,  36,  255};
+static const Clay_Color cal_secondaryText = {112, 114, 118, 255};
+static const Clay_Color cal_accentBlue    = {26,  115, 232, 255};
+static const Clay_Color cal_todayTint     = {232, 240, 254, 255};
+static const Clay_Color cal_redLine       = {234, 67,  53,  255};
+static const Clay_Color cal_cream         = {252, 250, 245, 255};
+static const Clay_Color cal_hoverBg       = {242, 240, 235, 255};
+
+static Clay_Color cal_hover_darken(Clay_Color base, int amount) {
+    return (Clay_Color){
+        base.r > amount ? base.r - amount : 0,
+        base.g > amount ? base.g - amount : 0,
+        base.b > amount ? base.b - amount : 0,
+        base.a
+    };
+}
 
 // ── Page routing ─────────────────────────────────────────────────────────────
 typedef enum { PAGE_CALENDAR, PAGE_SETTINGS, PAGE_ABOUT } AppPage;

@@ -81,7 +81,7 @@ static void SettingsPage_Render(uint32_t fontId) {
                      .childGap = 16,
                  },
              .backgroundColor = cal_cream,
-             .border = {.color = cal_borderColor, .width = {.bottom = 3}},
+             .border = {.color = cal_borderColor, .width = {.bottom = 1}},
          }) {
       CLAY(
           CLAY_ID("SettingsBackBtn"),
@@ -94,8 +94,9 @@ static void SettingsPage_Render(uint32_t fontId) {
                                          .y = CLAY_ALIGN_Y_CENTER},
                   },
               .backgroundColor =
-                  Clay_Hovered() ? cal_hoverYellow : (Clay_Color){0, 0, 0, 0},
-              .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(2)},
+                  Clay_Hovered() ? cal_hoverBg : (Clay_Color){0, 0, 0, 0},
+              .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(1)},
+              .cornerRadius = CLAY_CORNER_RADIUS(8),
           }) {
         CLAY_TEXT(CLAY_STRING("<"), CLAY_TEXT_CONFIG({
                                         .fontId = fontId,
@@ -143,17 +144,18 @@ static void SettingsPage_Render(uint32_t fontId) {
                                             .y = CLAY_ALIGN_Y_CENTER},
                      },
                  .backgroundColor =
-                     Clay_Hovered() ? cal_hoverYellow : cal_accentBlue,
+                     Clay_Hovered() ? cal_hover_darken(cal_accentBlue, 20) : cal_accentBlue,
                  .border =
                      {.color = cal_borderColor,
-                      .width = {.left = 3, .right = 6, .top = 3, .bottom = 6}},
+                      .width = CLAY_BORDER_ALL(1)},
+                 .cornerRadius = CLAY_CORNER_RADIUS(8),
              }) {
           CLAY_TEXT(
               CLAY_STRING("Connect Google Calendar"),
               CLAY_TEXT_CONFIG({
                   .fontId = fontId,
                   .fontSize = 20,
-                  .textColor = Clay_Hovered() ? cal_primaryText : cal_cream,
+                  .textColor = cal_cream,
               }));
         }
       }
@@ -180,10 +182,11 @@ static void SettingsPage_Render(uint32_t fontId) {
                                             .y = CLAY_ALIGN_Y_CENTER},
                      },
                  .backgroundColor = Clay_Hovered()
-                                        ? cal_hoverYellow
+                                        ? cal_hover_darken((Clay_Color){200, 200, 200, 255}, 15)
                                         : (Clay_Color){200, 200, 200, 255},
                  .border = {.color = cal_borderColor,
-                            .width = CLAY_BORDER_ALL(3)},
+                            .width = CLAY_BORDER_ALL(1)},
+                 .cornerRadius = CLAY_CORNER_RADIUS(8),
              }) {
           CLAY_TEXT(CLAY_STRING("Cancel"), CLAY_TEXT_CONFIG({
                                                .fontId = fontId,
@@ -214,6 +217,7 @@ static void SettingsPage_Render(uint32_t fontId) {
                                       .height = CLAY_SIZING_FIXED(12)},
                        },
                    .backgroundColor = (Clay_Color){0, 180, 80, 255},
+                   .cornerRadius = CLAY_CORNER_RADIUS(6),
                    .border = {.color = cal_borderColor,
                               .width = CLAY_BORDER_ALL(1)},
                }) {}
@@ -246,17 +250,18 @@ static void SettingsPage_Render(uint32_t fontId) {
                                              .y = CLAY_ALIGN_Y_CENTER},
                       },
                   .backgroundColor =
-                      Clay_Hovered() ? cal_hoverYellow : cal_accentBlue,
+                      Clay_Hovered() ? cal_hover_darken(cal_accentBlue, 20) : cal_accentBlue,
                   .border =
                       {.color = cal_borderColor,
-                       .width = {.left = 3, .right = 6, .top = 3, .bottom = 6}},
+                       .width = CLAY_BORDER_ALL(1)},
+                  .cornerRadius = CLAY_CORNER_RADIUS(8),
               }) {
             CLAY_TEXT(
                 CLAY_STRING("Refresh"),
                 CLAY_TEXT_CONFIG({
                     .fontId = fontId,
                     .fontSize = 20,
-                    .textColor = Clay_Hovered() ? cal_primaryText : cal_cream,
+                    .textColor = cal_cream,
                 }));
           }
 
@@ -271,17 +276,18 @@ static void SettingsPage_Render(uint32_t fontId) {
                                               .y = CLAY_ALIGN_Y_CENTER},
                        },
                    .backgroundColor = Clay_Hovered()
-                                          ? cal_hoverYellow
+                                          ? cal_hover_darken((Clay_Color){240, 60, 60, 255}, 20)
                                           : (Clay_Color){240, 60, 60, 255},
                    .border = {.color = cal_borderColor,
-                              .width = CLAY_BORDER_ALL(3)},
+                              .width = CLAY_BORDER_ALL(1)},
+                   .cornerRadius = CLAY_CORNER_RADIUS(8),
                }) {
             CLAY_TEXT(
                 CLAY_STRING("Disconnect"),
                 CLAY_TEXT_CONFIG({
                     .fontId = fontId,
                     .fontSize = 20,
-                    .textColor = Clay_Hovered() ? cal_primaryText : cal_cream,
+                    .textColor = cal_cream,
                 }));
           }
         }
@@ -316,17 +322,18 @@ static void SettingsPage_Render(uint32_t fontId) {
                                             .y = CLAY_ALIGN_Y_CENTER},
                      },
                  .backgroundColor =
-                     Clay_Hovered() ? cal_hoverYellow : cal_accentBlue,
+                     Clay_Hovered() ? cal_hover_darken(cal_accentBlue, 20) : cal_accentBlue,
                  .border =
                      {.color = cal_borderColor,
-                      .width = {.left = 3, .right = 6, .top = 3, .bottom = 6}},
+                      .width = CLAY_BORDER_ALL(1)},
+                 .cornerRadius = CLAY_CORNER_RADIUS(8),
              }) {
           CLAY_TEXT(
               CLAY_STRING("Try Again"),
               CLAY_TEXT_CONFIG({
                   .fontId = fontId,
                   .fontSize = 20,
-                  .textColor = Clay_Hovered() ? cal_primaryText : cal_cream,
+                  .textColor = cal_cream,
               }));
         }
       }

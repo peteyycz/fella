@@ -14,7 +14,7 @@ static void MenuItem(int index, const char *text, uint32_t fontId) {
                    .padding = {16, 16, 0, 0},
                },
            .backgroundColor = Clay_Hovered()
-                                  ? cal_hoverYellow
+                                  ? cal_hoverBg
                                   : (Clay_Color){0, 0, 0, 0},
            .border = {.color = cal_borderColor, .width = {.bottom = 1}},
 
