@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#define CAL_MAX_EVENTS 64
+#define CAL_MAX_EVENTS 256
 #define CAL_SUMMARY_LEN 64
 #define CAL_DESC_LEN   256
 #define CAL_LOC_LEN    128
@@ -13,10 +13,20 @@
 #define CAL_MAX_CALENDARS 8
 #define CAL_NAME_LEN      32
 #define CAL_PATH_LEN     128
+#define CAL_CALID_LEN    128
+
+typedef enum {
+  CAL_SOURCE_FILE,
+  CAL_SOURCE_GOOGLE,
+} CalendarSource;
 
 typedef struct {
   char    name[CAL_NAME_LEN];
-  char    filePath[CAL_PATH_LEN];
+  CalendarSource source;
+  union {
+    char filePath[CAL_PATH_LEN];
+    char calendarId[CAL_CALID_LEN];
+  };
   uint8_t colorR, colorG, colorB, colorA;
   bool    visible;
 } LinkedCalendar;
@@ -45,5 +55,7 @@ extern int            g_calendarCount;
 
 void Calendar_InitCalendars(void);
 void Calendar_LoadEvents(void);
+void Calendar_ReloadEvents(void);
+void load_events_from_json(const char *json, int calIndex);
 
 #endif

@@ -1,4 +1,6 @@
 #include "events.h"
+#include "google_auth.h"
+#include "google_calendar.h"
 #include "cJSON.h"
 
 #include <stdio.h>
@@ -67,42 +69,18 @@ static void parse_date(const char *s, int *year, int *mon, int *mday) {
 void Calendar_InitCalendars(void) {
   g_calendarCount = 0;
 
-  // Private calendar — hot pink
-  LinkedCalendar *priv = &g_calendars[g_calendarCount++];
-  strncpy(priv->name, "Private", CAL_NAME_LEN - 1);
-  strncpy(priv->filePath, "resources/private-entries.json", CAL_PATH_LEN - 1);
-  priv->colorR = 255; priv->colorG = 60;  priv->colorB = 120; priv->colorA = 255;
-  priv->visible = true;
-
-  // Work calendar — electric blue
-  LinkedCalendar *work = &g_calendars[g_calendarCount++];
-  strncpy(work->name, "Work", CAL_NAME_LEN - 1);
-  strncpy(work->filePath, "resources/work-entries.json", CAL_PATH_LEN - 1);
-  work->colorR = 50;  work->colorG = 120; work->colorB = 255; work->colorA = 255;
-  work->visible = true;
+  if (g_authState == AUTH_AUTHENTICATED) {
+    LinkedCalendar *gcal = &g_calendars[g_calendarCount++];
+    strncpy(gcal->name, "Google", CAL_NAME_LEN - 1);
+    gcal->source = CAL_SOURCE_GOOGLE;
+    strncpy(gcal->calendarId, "primary", CAL_CALID_LEN - 1);
+    gcal->colorR = 66;  gcal->colorG = 133; gcal->colorB = 244; gcal->colorA = 255;
+    gcal->visible = true;
+  }
 }
 
-static void load_events_from_file(const char *path, int calIndex) {
-  FILE *f = fopen(path, "r");
-  if (!f) {
-    fprintf(stderr, "Could not open %s\n", path);
-    return;
-  }
-
-  fseek(f, 0, SEEK_END);
-  long fsize = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  char *buf = (char *)malloc(fsize + 1);
-  if (!buf) {
-    fclose(f);
-    return;
-  }
-  (void)fread(buf, 1, fsize, f);
-  buf[fsize] = '\0';
-  fclose(f);
-
-  cJSON *root = cJSON_Parse(buf);
-  free(buf);
+void load_events_from_json(const char *json, int calIndex) {
+  cJSON *root = cJSON_Parse(json);
   if (!root)
     return;
 
@@ -179,6 +157,29 @@ static void load_events_from_file(const char *path, int calIndex) {
   cJSON_Delete(root);
 }
 
+static void load_events_from_file(const char *path, int calIndex) {
+  FILE *f = fopen(path, "r");
+  if (!f) {
+    fprintf(stderr, "Could not open %s\n", path);
+    return;
+  }
+
+  fseek(f, 0, SEEK_END);
+  long fsize = ftell(f);
+  fseek(f, 0, SEEK_SET);
+  char *buf = (char *)malloc(fsize + 1);
+  if (!buf) {
+    fclose(f);
+    return;
+  }
+  size_t nread = fread(buf, 1, fsize, f);
+  buf[nread] = '\0';
+  fclose(f);
+
+  load_events_from_json(buf, calIndex);
+  free(buf);
+}
+
 void Calendar_LoadEvents(void) {
   if (g_eventsLoaded)
     return;
@@ -189,6 +190,17 @@ void Calendar_LoadEvents(void) {
     Calendar_InitCalendars();
 
   for (int i = 0; i < g_calendarCount; i++) {
-    load_events_from_file(g_calendars[i].filePath, i);
+    if (g_calendars[i].source == CAL_SOURCE_FILE) {
+      load_events_from_file(g_calendars[i].filePath, i);
+    } else if (g_calendars[i].source == CAL_SOURCE_GOOGLE) {
+      GoogleCalendar_FetchEvents(g_calendars[i].calendarId, i);
+    }
   }
+}
+
+void Calendar_ReloadEvents(void) {
+  g_eventsLoaded = false;
+  g_eventCount = 0;
+  g_calendarCount = 0;
+  Calendar_LoadEvents();
 }

@@ -23,7 +23,7 @@ static AppPage g_currentPage = PAGE_CALENDAR;
 
 // ── Static string buffers for Clay text ──────────────────────────────────────
 // Clay_String.chars must remain valid for the frame; use static buffers.
-#define CAL_MAX_EVT_TITLE_BUFS 64
+#define CAL_MAX_EVT_TITLE_BUFS 256
 static char g_evtTitleBuf[CAL_MAX_EVT_TITLE_BUFS][CAL_SUMMARY_LEN];
 static int  g_evtTitleBufIdx = 0;
 

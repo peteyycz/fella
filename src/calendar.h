@@ -579,7 +579,7 @@ static void Calendar_Render(uint32_t fontId) {
                  }) {
               // 24 hour slots
               for (int h = 0; h < 24; h++) {
-                CLAY(CLAY_IDI_LOCAL("HourSlot", h),
+                CLAY(CLAY_IDI("HourSlot", i * 24 + h),
                      {
                          .layout =
                              {

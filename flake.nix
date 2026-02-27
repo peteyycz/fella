@@ -24,6 +24,7 @@
 
           buildInputs = with pkgs; [
             raylib
+            curl
           ] ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [
             libx11
             libxrandr
@@ -62,6 +63,7 @@
 
             # Clay dependency
             raylib
+            curl
           ] ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [
             libx11
             libxrandr

@@ -1,13 +1,15 @@
 #define CLAY_IMPLEMENTATION
+#include "calendar.h"
 #include "clay.h"
 #include "clay_renderer_raylib.c"
-#include "calendar.h"
+#include "google_auth.h"
+#include <curl/curl.h>
 #include <time.h>
 
 const uint32_t FONT_ID_BODY_24 = 0;
 
 void HandleClayErrors(Clay_ErrorData errorData) {
-  printf("%s", errorData.errorText.chars);
+  fprintf(stderr, "Clay error: %s\n", errorData.errorText.chars);
 }
 
 Clay_RenderCommandArray CreateLayout(void) {
@@ -26,6 +28,9 @@ Clay_RenderCommandArray CreateLayout(void) {
 }
 
 int main(void) {
+  curl_global_init(CURL_GLOBAL_DEFAULT);
+  GoogleAuth_Init();
+
   uint64_t totalMemorySize = Clay_MinMemorySize();
   Clay_Arena clayMemory = Clay_CreateArenaWithCapacityAndMemory(
       totalMemorySize, malloc(totalMemorySize));
@@ -57,18 +62,22 @@ int main(void) {
 
     // Auto-scroll to current time on first frame
     if (!scrollInitialized) {
-      Clay_ScrollContainerData scrollData =
-          Clay_GetScrollContainerData(Clay_GetElementId(CLAY_STRING("ScrollArea")));
+      Clay_ScrollContainerData scrollData = Clay_GetScrollContainerData(
+          Clay_GetElementId(CLAY_STRING("ScrollArea")));
       if (scrollData.found && scrollData.scrollPosition) {
         time_t now = time(NULL);
         struct tm lt = *localtime(&now);
-        float currentTimeY = ((float)lt.tm_hour + (float)lt.tm_min / 60.0f) * CAL_HOUR_HEIGHT;
+        float currentTimeY =
+            ((float)lt.tm_hour + (float)lt.tm_min / 60.0f) * CAL_HOUR_HEIGHT;
         float viewHeight = scrollData.scrollContainerDimensions.height;
         float headerOverlay = CAL_HEADER_HEIGHT + CAL_ALLDAY_HEIGHT;
-        float targetScroll = -(currentTimeY - (viewHeight + headerOverlay) / 2.0f);
+        float targetScroll =
+            -(currentTimeY - (viewHeight + headerOverlay) / 2.0f);
         float maxScroll = -(scrollData.contentDimensions.height - viewHeight);
-        if (targetScroll > 0) targetScroll = 0;
-        if (targetScroll < maxScroll) targetScroll = maxScroll;
+        if (targetScroll > 0)
+          targetScroll = 0;
+        if (targetScroll < maxScroll)
+          targetScroll = maxScroll;
         scrollData.scrollPosition->y = targetScroll;
         scrollInitialized = true;
       }
@@ -81,5 +90,6 @@ int main(void) {
   }
 
   Clay_Raylib_Close();
+  curl_global_cleanup();
   return 0;
 }
