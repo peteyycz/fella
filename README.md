@@ -45,62 +45,6 @@ cmake --build build
 ./build/fella
 ```
 
-## Project Structure
-
-```
-src/
-  main.c                 # Entry point, render loop, Clay/Raylib init
-  calendar.h             # Main calendar layout and rendering
-  cal_common.h           # Color palette, shared constants, utilities
-  events.h               # Event and calendar data structures
-  events.c               # JSON event loading and datetime parsing
-  components/
-    calendar_checkbox.h   # Calendar visibility checkbox
-    calendar_row.h        # Sidebar calendar row
-    event_detail.h        # Event detail popup
-    menu_item.h           # Sidebar menu item
-    settings_page.h       # Settings page
-    about_page.h          # About page
-vendor/
-  clay.h                  # Clay UI framework
-  clay_renderer_raylib.c  # Raylib renderer for Clay
-  cJSON.h / cJSON.c       # JSON parser
-resources/
-  SpaceMono-Bold.ttf      # UI font
-  private-entries.json    # Private calendar events
-  work-entries.json       # Work calendar events
-```
-
-## Calendar Data
-
-Events are loaded from JSON files in `resources/` using the Google Calendar export format:
-
-```json
-{
-  "items": [
-    {
-      "summary": "Meeting",
-      "description": "Weekly sync",
-      "location": "Room 4",
-      "colorId": "7",
-      "start": {
-        "dateTime": "2026-02-27T09:00:00+01:00"
-      },
-      "end": {
-        "dateTime": "2026-02-27T10:00:00+01:00"
-      }
-    },
-    {
-      "summary": "Holiday",
-      "start": { "date": "2026-02-28" },
-      "end": { "date": "2026-03-01" }
-    }
-  ]
-}
-```
-
-Calendars are defined in `src/events.c` with a name, JSON file path, and display color. Events support an optional `colorId` (1-11) to override the calendar color.
-
 ## License
 
 MIT
