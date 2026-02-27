@@ -1,11 +1,16 @@
 #ifndef CALENDAR_H
 #define CALENDAR_H
 
+#include "clay.h"
+#include "raylib.h"
+
+#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
-static const char *CALENDAR_DAY_NAMES[] = {"Sun", "Mon", "Tue", "Wed",
-                                           "Thu", "Fri", "Sat"};
+static const char *CALENDAR_DAY_NAMES[] = {"Mon", "Tue", "Wed", "Thu",
+                                           "Fri", "Sat", "Sun"};
 
 static const char *HOUR_LABELS[] = {
     "12 AM", "1 AM", "2 AM",  "3 AM",  "4 AM",  "5 AM", "6 AM",  "7 AM",
@@ -19,6 +24,20 @@ static const char *HOUR_LABELS[] = {
 #define CAL_GRID_TOTAL_HEIGHT (24.0f * CAL_HOUR_HEIGHT)
 
 static void Calendar_Render(uint32_t fontId) {
+  static bool menuOpen = false;
+
+  // Toggle menu on hamburger button click
+  if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("HamburgerBtn"))) &&
+      IsMouseButtonPressed(0)) {
+    menuOpen = !menuOpen;
+  }
+  // Close menu on scrim click
+  if (menuOpen &&
+      Clay_PointerOver(Clay_GetElementId(CLAY_STRING("MenuScrim"))) &&
+      IsMouseButtonPressed(0)) {
+    menuOpen = false;
+  }
+
   time_t now = time(NULL);
   struct tm today_tm = *localtime(&now);
   int today_mday = today_tm.tm_mday;
@@ -27,18 +46,19 @@ static void Calendar_Render(uint32_t fontId) {
   int today_hour = today_tm.tm_hour;
   int today_min = today_tm.tm_min;
 
-  // Rewind to Sunday of this week
-  struct tm sunday_tm = today_tm;
-  sunday_tm.tm_mday -= today_tm.tm_wday;
-  mktime(&sunday_tm);
+  // Rewind to Monday of this week
+  struct tm monday_tm = today_tm;
+  int days_since_monday = (today_tm.tm_wday + 6) % 7;
+  monday_tm.tm_mday -= days_since_monday;
+  mktime(&monday_tm);
 
   // Pre-compute day info
   static char dayNumBufs[7][4];
   struct tm days[7];
   bool isToday[7];
   for (int i = 0; i < 7; i++) {
-    days[i] = sunday_tm;
-    days[i].tm_mday = sunday_tm.tm_mday + i;
+    days[i] = monday_tm;
+    days[i].tm_mday = monday_tm.tm_mday + i;
     mktime(&days[i]);
     snprintf(dayNumBufs[i], sizeof(dayNumBufs[i]), "%d", days[i].tm_mday);
     isToday[i] = (days[i].tm_mday == today_mday &&
@@ -89,15 +109,36 @@ static void Calendar_Render(uint32_t fontId) {
              .border = {.color = borderGray, .width = {.bottom = 1}},
          }) {
 
-      // Header gutter (spacer aligned with time labels)
-      CLAY(CLAY_ID("HeaderGutter"),
+      // Hamburger menu button (aligned with time labels gutter)
+      CLAY(CLAY_ID("HamburgerBtn"),
            {
                .layout =
                    {
                        .sizing = {.width = CLAY_SIZING_FIXED(CAL_GUTTER_WIDTH),
                                   .height = CLAY_SIZING_GROW(0)},
+                       .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
+                                          .y = CLAY_ALIGN_Y_CENTER},
+                       .layoutDirection = CLAY_TOP_TO_BOTTOM,
+                       .childGap = 4,
                    },
-           }) {}
+               .backgroundColor = Clay_Hovered()
+                                      ? (Clay_Color){232, 232, 232, 255}
+                                      : (Clay_Color){0, 0, 0, 0},
+               .cornerRadius = CLAY_CORNER_RADIUS(4),
+           }) {
+        for (int bar = 0; bar < 3; bar++) {
+          CLAY(CLAY_IDI("HamburgerBar", bar),
+               {
+                   .layout =
+                       {
+                           .sizing = {.width = CLAY_SIZING_FIXED(22),
+                                      .height = CLAY_SIZING_FIXED(3)},
+                       },
+                   .backgroundColor = {60, 64, 67, 255},
+                   .cornerRadius = CLAY_CORNER_RADIUS(1),
+               }) {}
+        }
+      }
 
       // 7 day header cells
       for (int i = 0; i < 7; i++) {
@@ -293,6 +334,78 @@ static void Calendar_Render(uint32_t fontId) {
                    }) {}
             }
           }
+        }
+      }
+    }
+  }
+
+  // ── Sidebar Menu Overlay ──
+  if (menuOpen) {
+    // Scrim / backdrop
+    CLAY(CLAY_ID("MenuScrim"),
+         {
+             .layout =
+                 {
+                     .sizing = {.width = CLAY_SIZING_GROW(0),
+                                .height = CLAY_SIZING_GROW(0)},
+                 },
+             .backgroundColor = {0, 0, 0, 120},
+             .floating =
+                 {
+                     .attachTo = CLAY_ATTACH_TO_ROOT,
+                     .zIndex = 100,
+                     .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_CAPTURE,
+                 },
+         }) {}
+
+    // Sidebar panel
+    CLAY(CLAY_ID("SidebarPanel"),
+         {
+             .layout =
+                 {
+                     .sizing = {.width = CLAY_SIZING_FIXED(280),
+                                .height = CLAY_SIZING_GROW(0)},
+                     .layoutDirection = CLAY_TOP_TO_BOTTOM,
+                     .padding = {0, 0, 8, 8},
+                 },
+             .backgroundColor = white,
+             .border = {.color = borderGray, .width = {.right = 1}},
+             .floating =
+                 {
+                     .attachTo = CLAY_ATTACH_TO_ROOT,
+                     .attachPoints = {.element = CLAY_ATTACH_POINT_LEFT_TOP,
+                                      .parent = CLAY_ATTACH_POINT_LEFT_TOP},
+                     .zIndex = 101,
+                     .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_CAPTURE,
+                 },
+         }) {
+
+      // Menu items
+      const char *menuItems[] = {"Settings", "About"};
+      for (int mi = 0; mi < 2; mi++) {
+        CLAY(CLAY_IDI("MenuItem", mi),
+             {
+                 .layout =
+                     {
+                         .sizing = {.width = CLAY_SIZING_GROW(0),
+                                    .height = CLAY_SIZING_FIXED(44)},
+                         .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
+                         .padding = {16, 16, 0, 0},
+                     },
+                 .backgroundColor = Clay_Hovered()
+                                        ? (Clay_Color){232, 240, 254, 255}
+                                        : (Clay_Color){0, 0, 0, 0},
+                 .cornerRadius = CLAY_CORNER_RADIUS(4),
+             }) {
+          Clay_String itemText = {
+              .length = (int32_t)strlen(menuItems[mi]),
+              .chars = menuItems[mi],
+          };
+          CLAY_TEXT(itemText, CLAY_TEXT_CONFIG({
+                                  .fontId = fontId,
+                                  .fontSize = 14,
+                                  .textColor = primaryText,
+                              }));
         }
       }
     }
