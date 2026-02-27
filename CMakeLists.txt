@@ -3,6 +3,9 @@ project(fella C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# Prevent cmake from stripping nix-provided include dirs from compile_commands.json
+# (clangd needs them even though the nix gcc wrapper finds them implicitly)
+set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "")
 
 # Google OAuth credentials — set via environment variables
 if(DEFINED ENV{GOOGLE_CLIENT_ID})
@@ -23,7 +26,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(RAYLIB REQUIRED raylib)
 pkg_check_modules(CURL REQUIRED IMPORTED_TARGET libcurl)
 
-add_executable(fella src/main.c src/events.c src/google_auth.c src/google_calendar.c vendor/cJSON.c)
+add_executable(fella src/main.c src/events.c src/google_auth.c src/google_calendar.c src/oauth_server.c vendor/cJSON.c)
 target_include_directories(fella PRIVATE src vendor ${RAYLIB_INCLUDE_DIRS} ${CMAKE_BINARY_DIR})
 target_link_libraries(fella ${RAYLIB_LIBRARIES} PkgConfig::CURL m pthread dl)
 target_link_directories(fella PRIVATE ${RAYLIB_LIBRARY_DIRS})

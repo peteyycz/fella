@@ -3,96 +3,37 @@
 
 #include "cal_common.h"
 #include "google_auth.h"
+#include "oauth_server.h"
 #include "raylib.h"
 
 #include <stdio.h>
-#include <string.h>
-
-// ── Read system clipboard via wl-paste or xclip ─────────────────────────────
-static void SettingsPage_PasteFromClipboard(void) {
-  // Try Raylib first
-  const char *clip = GetClipboardText();
-  static char sysBuf[GOOGLE_AUTH_CODE_MAX];
-  if (!clip || !clip[0]) {
-    FILE *p = popen("wl-paste --no-newline 2>/dev/null || "
-                    "xclip -selection clipboard -o 2>/dev/null",
-                    "r");
-    if (p) {
-      size_t n = fread(sysBuf, 1, sizeof(sysBuf) - 1, p);
-      sysBuf[n] = '\0';
-      pclose(p);
-      if (n > 0)
-        clip = sysBuf;
-    }
-  }
-  if (clip) {
-    g_authCodeInputLen = 0;
-    for (int i = 0; clip[i] && g_authCodeInputLen < GOOGLE_AUTH_CODE_MAX - 1;
-         i++) {
-      if (clip[i] >= 32 && clip[i] < 127) {
-        g_authCodeInput[g_authCodeInputLen++] = clip[i];
-      }
-    }
-    g_authCodeInput[g_authCodeInputLen] = '\0';
-  }
-}
-
-// ── Text input handling (called each frame from the settings page) ───────────
-static void SettingsPage_HandleTextInput(void) {
-  if (g_authState != AUTH_AWAITING_CODE)
-    return;
-
-  // Keyboard character input
-  int ch;
-  while ((ch = GetCharPressed()) != 0) {
-    if (g_authCodeInputLen < GOOGLE_AUTH_CODE_MAX - 1 && ch >= 32 && ch < 127) {
-      g_authCodeInput[g_authCodeInputLen++] = (char)ch;
-      g_authCodeInput[g_authCodeInputLen] = '\0';
-    }
-  }
-
-  // Backspace
-  if (IsKeyPressed(KEY_BACKSPACE) && g_authCodeInputLen > 0) {
-    g_authCodeInput[--g_authCodeInputLen] = '\0';
-  }
-
-  // Ctrl+V paste
-  if ((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) &&
-      IsKeyPressed(KEY_V)) {
-    SettingsPage_PasteFromClipboard();
-  }
-}
 
 static void SettingsPage_Render(uint32_t fontId) {
-  // Handle text input each frame
-  SettingsPage_HandleTextInput();
+  // Poll OAuth server status
+  if (g_authState == AUTH_AWAITING_CODE &&
+      g_oauthServerStatus == OAUTH_SERVER_RECEIVED) {
+    if (GoogleAuth_ExchangeCode(g_oauthReceivedCode)) {
+      Calendar_ReloadEvents();
+    }
+    OAuthServer_Stop();
+  } else if (g_authState == AUTH_AWAITING_CODE &&
+             g_oauthServerStatus == OAUTH_SERVER_ERROR) {
+    snprintf(g_authErrorMsg, GOOGLE_AUTH_ERR_MAX,
+             "Local OAuth server failed to start");
+    g_authState = AUTH_ERROR;
+    OAuthServer_Stop();
+  }
 
   // Handle button clicks
   if (IsMouseButtonPressed(0)) {
     if (g_authState == AUTH_READY &&
         Clay_PointerOver(Clay_GetElementId(CLAY_STRING("GoogleConnectBtn")))) {
-      GoogleAuth_BuildAuthUrl();
-      OpenURL(g_authUrl);
-      g_authState = AUTH_AWAITING_CODE;
-      g_authCodeInput[0] = '\0';
-      g_authCodeInputLen = 0;
-    }
-    if (g_authState == AUTH_AWAITING_CODE &&
-        Clay_PointerOver(Clay_GetElementId(CLAY_STRING("GoogleSubmitBtn")))) {
-      if (g_authCodeInputLen > 0) {
-        // Strip whitespace from pasted code
-        char code[GOOGLE_AUTH_CODE_MAX];
-        int j = 0;
-        for (int i = 0; i < g_authCodeInputLen; i++) {
-          if (g_authCodeInput[i] != ' ' && g_authCodeInput[i] != '\n' &&
-              g_authCodeInput[i] != '\r' && g_authCodeInput[i] != '\t') {
-            code[j++] = g_authCodeInput[i];
-          }
-        }
-        code[j] = '\0';
-        if (GoogleAuth_ExchangeCode(code)) {
-          Calendar_ReloadEvents();
-        }
+      if (OAuthServer_Start()) {
+        char redirectUri[128];
+        OAuthServer_GetRedirectUri(redirectUri, sizeof(redirectUri));
+        GoogleAuth_BuildAuthUrlWithRedirect(redirectUri);
+        OpenURL(g_authUrl);
+        g_authState = AUTH_AWAITING_CODE;
       }
     }
     if (g_authState == AUTH_AUTHENTICATED &&
@@ -112,13 +53,8 @@ static void SettingsPage_Render(uint32_t fontId) {
     }
     if (g_authState == AUTH_AWAITING_CODE &&
         Clay_PointerOver(Clay_GetElementId(CLAY_STRING("GoogleCancelBtn")))) {
+      OAuthServer_Stop();
       g_authState = AUTH_READY;
-      g_authCodeInput[0] = '\0';
-      g_authCodeInputLen = 0;
-    }
-    if (g_authState == AUTH_AWAITING_CODE &&
-        Clay_PointerOver(Clay_GetElementId(CLAY_STRING("GooglePasteBtn")))) {
-      SettingsPage_PasteFromClipboard();
     }
   }
 
@@ -222,19 +158,11 @@ static void SettingsPage_Render(uint32_t fontId) {
         }
       }
 
-      // ── AUTH_AWAITING_CODE: Instructions + text input + submit ──
+      // ── AUTH_AWAITING_CODE: Waiting for browser authorization ──
       if (g_authState == AUTH_AWAITING_CODE) {
         CLAY_TEXT(
-            CLAY_STRING("A browser window has opened. Sign in with Google,"),
-            CLAY_TEXT_CONFIG({
-                .fontId = fontId,
-                .fontSize = 18,
-                .textColor = cal_secondaryText,
-                .wrapMode = CLAY_TEXT_WRAP_WORDS,
-            }));
-        CLAY_TEXT(
-            CLAY_STRING(
-                "then copy the code from the URL bar and paste it below:"),
+            CLAY_STRING("Waiting for authorization... Complete sign-in in your "
+                        "browser."),
             CLAY_TEXT_CONFIG({
                 .fontId = fontId,
                 .fontSize = 18,
@@ -242,129 +170,26 @@ static void SettingsPage_Render(uint32_t fontId) {
                 .wrapMode = CLAY_TEXT_WRAP_WORDS,
             }));
 
-        // Text input row: box + paste button
-        CLAY(CLAY_ID("GoogleCodeInputRow"),
+        CLAY(CLAY_ID("GoogleCancelBtn"),
              {
                  .layout =
                      {
-                         .sizing = {.width = CLAY_SIZING_GROW(.max = 620),
-                                    .height = CLAY_SIZING_FIT(0)},
-                         .childGap = 8,
-                         .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
+                         .sizing = {.width = CLAY_SIZING_FIXED(120),
+                                    .height = CLAY_SIZING_FIXED(44)},
+                         .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
+                                            .y = CLAY_ALIGN_Y_CENTER},
                      },
+                 .backgroundColor = Clay_Hovered()
+                                        ? cal_hoverYellow
+                                        : (Clay_Color){200, 200, 200, 255},
+                 .border = {.color = cal_borderColor,
+                            .width = CLAY_BORDER_ALL(3)},
              }) {
-          CLAY(CLAY_ID("GoogleCodeInputBox"),
-               {
-                   .layout =
-                       {
-                           .sizing = {.width = CLAY_SIZING_GROW(.max = 500),
-                                      .height = CLAY_SIZING_FIXED(44)},
-                           .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
-                           .padding = {8, 8, 0, 0},
-                       },
-                   .backgroundColor = (Clay_Color){255, 255, 255, 255},
-                   .border = {.color = cal_borderColor,
-                              .width = CLAY_BORDER_ALL(3)},
-               }) {
-            if (g_authCodeInputLen > 0) {
-              CLAY_TEXT(cal_make_string(g_authCodeInput),
-                        CLAY_TEXT_CONFIG({
-                            .fontId = fontId,
-                            .fontSize = 18,
-                            .textColor = cal_primaryText,
-                        }));
-            } else {
-              CLAY_TEXT(CLAY_STRING("Paste authorization code here..."),
-                        CLAY_TEXT_CONFIG({
-                            .fontId = fontId,
-                            .fontSize = 18,
-                            .textColor = (Clay_Color){150, 150, 150, 255},
-                        }));
-            }
-          }
-
-          // Paste button
-          CLAY(CLAY_ID("GooglePasteBtn"),
-               {
-                   .layout =
-                       {
-                           .sizing = {.width = CLAY_SIZING_FIXED(80),
-                                      .height = CLAY_SIZING_FIXED(44)},
-                           .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
-                                              .y = CLAY_ALIGN_Y_CENTER},
-                       },
-                   .backgroundColor = Clay_Hovered()
-                                          ? cal_hoverYellow
-                                          : (Clay_Color){220, 220, 220, 255},
-                   .border = {.color = cal_borderColor,
-                              .width = CLAY_BORDER_ALL(3)},
-               }) {
-            CLAY_TEXT(CLAY_STRING("Paste"), CLAY_TEXT_CONFIG({
-                                                .fontId = fontId,
-                                                .fontSize = 18,
-                                                .textColor = cal_primaryText,
-                                            }));
-          }
-        } // close GoogleCodeInputRow
-
-        // Button row
-        CLAY(CLAY_ID("GoogleCodeBtnRow"),
-             {
-                 .layout =
-                     {
-                         .sizing = {.width = CLAY_SIZING_GROW(0),
-                                    .height = CLAY_SIZING_FIT(0)},
-                         .childGap = 12,
-                     },
-             }) {
-          CLAY(
-              CLAY_ID("GoogleSubmitBtn"),
-              {
-                  .layout =
-                      {
-                          .sizing = {.width = CLAY_SIZING_FIXED(120),
-                                     .height = CLAY_SIZING_FIXED(44)},
-                          .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
-                                             .y = CLAY_ALIGN_Y_CENTER},
-                      },
-                  .backgroundColor = Clay_Hovered()
-                                         ? cal_hoverYellow
-                                         : (Clay_Color){0, 180, 80, 255},
-                  .border =
-                      {.color = cal_borderColor,
-                       .width = {.left = 3, .right = 6, .top = 3, .bottom = 6}},
-              }) {
-            CLAY_TEXT(
-                CLAY_STRING("Submit"),
-                CLAY_TEXT_CONFIG({
-                    .fontId = fontId,
-                    .fontSize = 20,
-                    .textColor = Clay_Hovered() ? cal_primaryText : cal_cream,
-                }));
-          }
-
-          // Cancel button
-          CLAY(CLAY_ID("GoogleCancelBtn"),
-               {
-                   .layout =
-                       {
-                           .sizing = {.width = CLAY_SIZING_FIXED(120),
-                                      .height = CLAY_SIZING_FIXED(44)},
-                           .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
-                                              .y = CLAY_ALIGN_Y_CENTER},
-                       },
-                   .backgroundColor = Clay_Hovered()
-                                          ? cal_hoverYellow
-                                          : (Clay_Color){200, 200, 200, 255},
-                   .border = {.color = cal_borderColor,
-                              .width = CLAY_BORDER_ALL(3)},
-               }) {
-            CLAY_TEXT(CLAY_STRING("Cancel"), CLAY_TEXT_CONFIG({
-                                                 .fontId = fontId,
-                                                 .fontSize = 20,
-                                                 .textColor = cal_primaryText,
-                                             }));
-          }
+          CLAY_TEXT(CLAY_STRING("Cancel"), CLAY_TEXT_CONFIG({
+                                               .fontId = fontId,
+                                               .fontSize = 20,
+                                               .textColor = cal_primaryText,
+                                           }));
         }
       }
 

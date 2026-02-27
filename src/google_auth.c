@@ -10,8 +10,9 @@
 #include <unistd.h>
 
 #include "config.h"
-// GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are defined in config.h (generated at build time)
-static const char *GOOGLE_REDIRECT_URI = "http://127.0.0.1";
+// GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are defined in config.h (generated
+// at build time)
+static char s_redirectUri[128] = "";
 static const char *GOOGLE_SCOPE =
     "https://www.googleapis.com/auth/calendar.readonly";
 
@@ -20,8 +21,6 @@ GoogleTokens g_googleTokens = {0};
 GoogleAuthState g_authState = AUTH_READY;
 char g_authErrorMsg[GOOGLE_AUTH_ERR_MAX] = {0};
 char g_authUrl[GOOGLE_AUTH_URL_MAX] = {0};
-char g_authCodeInput[GOOGLE_AUTH_CODE_MAX] = {0};
-int g_authCodeInputLen = 0;
 
 // ── libcurl write callback ───────────────────────────────────────────────────
 typedef struct {
@@ -208,15 +207,15 @@ void GoogleAuth_Init(void) {
   memset(&g_googleTokens, 0, sizeof(g_googleTokens));
   g_authState = AUTH_READY;
   g_authErrorMsg[0] = '\0';
-  g_authCodeInput[0] = '\0';
-  g_authCodeInputLen = 0;
-
   if (load_tokens()) {
     g_authState = AUTH_AUTHENTICATED;
   }
 }
 
-void GoogleAuth_BuildAuthUrl(void) {
+void GoogleAuth_BuildAuthUrlWithRedirect(const char *redirect_uri) {
+  strncpy(s_redirectUri, redirect_uri, sizeof(s_redirectUri) - 1);
+  s_redirectUri[sizeof(s_redirectUri) - 1] = '\0';
+
   snprintf(g_authUrl, GOOGLE_AUTH_URL_MAX,
            "https://accounts.google.com/o/oauth2/v2/auth"
            "?client_id=%s"
@@ -225,7 +224,11 @@ void GoogleAuth_BuildAuthUrl(void) {
            "&scope=%s"
            "&access_type=offline"
            "&prompt=consent",
-           GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI, GOOGLE_SCOPE);
+           GOOGLE_CLIENT_ID, s_redirectUri, GOOGLE_SCOPE);
+}
+
+void GoogleAuth_BuildAuthUrl(void) {
+  GoogleAuth_BuildAuthUrlWithRedirect(s_redirectUri);
 }
 
 bool GoogleAuth_ExchangeCode(const char *code) {
@@ -243,7 +246,7 @@ bool GoogleAuth_ExchangeCode(const char *code) {
            "&client_secret=%s"
            "&redirect_uri=%s"
            "&grant_type=authorization_code",
-           code, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI);
+           code, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, s_redirectUri);
 
   CurlBuffer response = {0};
 
@@ -332,8 +335,6 @@ void GoogleAuth_Disconnect(void) {
   memset(&g_googleTokens, 0, sizeof(g_googleTokens));
   g_authState = AUTH_READY;
   g_authErrorMsg[0] = '\0';
-  g_authCodeInput[0] = '\0';
-  g_authCodeInputLen = 0;
 
   char path[512];
   get_tokens_path(path, sizeof(path));

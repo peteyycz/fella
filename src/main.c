@@ -3,7 +3,10 @@
 #include "clay.h"
 #include "clay_renderer_raylib.c"
 #include "google_auth.h"
+#include "oauth_server.h"
 #include <curl/curl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 const uint32_t FONT_ID_BODY_24 = 0;
@@ -89,6 +92,7 @@ int main(void) {
     EndDrawing();
   }
 
+  OAuthServer_Stop();
   Clay_Raylib_Close();
   curl_global_cleanup();
   return 0;

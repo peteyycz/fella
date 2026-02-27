@@ -25,11 +25,9 @@ extern GoogleTokens    g_googleTokens;
 extern GoogleAuthState g_authState;
 extern char            g_authErrorMsg[GOOGLE_AUTH_ERR_MAX];
 extern char            g_authUrl[GOOGLE_AUTH_URL_MAX];
-extern char            g_authCodeInput[GOOGLE_AUTH_CODE_MAX];
-extern int             g_authCodeInputLen;
-
 void GoogleAuth_Init(void);
 void GoogleAuth_BuildAuthUrl(void);
+void GoogleAuth_BuildAuthUrlWithRedirect(const char *redirect_uri);
 bool GoogleAuth_ExchangeCode(const char *code);
 bool GoogleAuth_RefreshAccessToken(void);
 bool GoogleAuth_EnsureValidToken(void);
