@@ -1,0 +1,120 @@
+{
+  "kind": "calendar#events",
+  "etag": "\"priv123def456\"",
+  "summary": "john.doe@gmail.com",
+  "updated": "2026-02-27T10:00:00.000Z",
+  "timeZone": "Europe/Budapest",
+  "accessRole": "owner",
+  "nextSyncToken": "CMC4xN3h2QoSBGpvaG4YAQ==",
+  "items": [
+    {
+      "kind": "calendar#event",
+      "etag": "\"3012345678902000\"",
+      "id": "evt003",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=evt003",
+      "created": "2026-02-15T08:00:00.000Z",
+      "updated": "2026-02-15T08:00:00.000Z",
+      "summary": "Lunch with Alex",
+      "creator": {
+        "email": "john.doe@gmail.com",
+        "self": true
+      },
+      "organizer": {
+        "email": "john.doe@gmail.com",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2026-02-27T12:00:00+01:00",
+        "timeZone": "Europe/Budapest"
+      },
+      "end": {
+        "dateTime": "2026-02-27T13:00:00+01:00",
+        "timeZone": "Europe/Budapest"
+      },
+      "iCalUID": "evt003@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3012345678903000\"",
+      "id": "evt004",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=evt004",
+      "created": "2026-02-22T11:00:00.000Z",
+      "updated": "2026-02-22T11:00:00.000Z",
+      "summary": "Dentist Appointment",
+      "location": "123 Main St, Suite 200",
+      "creator": {
+        "email": "john.doe@gmail.com",
+        "self": true
+      },
+      "organizer": {
+        "email": "john.doe@gmail.com",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2026-02-28T10:00:00+01:00",
+        "timeZone": "Europe/Budapest"
+      },
+      "end": {
+        "dateTime": "2026-02-28T11:00:00+01:00",
+        "timeZone": "Europe/Budapest"
+      },
+      "iCalUID": "evt004@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": false,
+        "overrides": [
+          {
+            "method": "popup",
+            "minutes": 60
+          },
+          {
+            "method": "email",
+            "minutes": 1440
+          }
+        ]
+      },
+      "eventType": "default"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3012345678906000\"",
+      "id": "evt007",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=evt007",
+      "created": "2026-02-26T20:00:00.000Z",
+      "updated": "2026-02-26T20:00:00.000Z",
+      "summary": "Yoga Class",
+      "location": "Downtown Fitness Center",
+      "colorId": "2",
+      "creator": {
+        "email": "john.doe@gmail.com",
+        "self": true
+      },
+      "organizer": {
+        "email": "john.doe@gmail.com",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2026-03-01T07:00:00+01:00",
+        "timeZone": "Europe/Budapest"
+      },
+      "end": {
+        "dateTime": "2026-03-01T08:00:00+01:00",
+        "timeZone": "Europe/Budapest"
+      },
+      "iCalUID": "evt007@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default"
+    }
+  ]
+}

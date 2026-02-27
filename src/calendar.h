@@ -1,13 +1,10 @@
 #ifndef CALENDAR_H
 #define CALENDAR_H
 
-#include "clay.h"
+#include "cal_common.h"
 #include "raylib.h"
 
-#include "events.h"
-
 #include <stdio.h>
-#include <string.h>
 #include <time.h>
 
 static const char *CALENDAR_DAY_NAMES[] = {"Mon", "Tue", "Wed", "Thu",
@@ -78,20 +75,11 @@ static float timed_event_hour(time_t t) {
   return (float)lt.tm_hour + (float)lt.tm_min / 60.0f + (float)lt.tm_sec / 3600.0f;
 }
 
-// ── Static string buffers for Clay text ──────────────────────────────────────
-// Clay_String.chars must remain valid for the frame; use static buffers.
-#define CAL_MAX_EVT_TITLE_BUFS 64
-static char g_evtTitleBuf[CAL_MAX_EVT_TITLE_BUFS][CAL_SUMMARY_LEN];
-static int  g_evtTitleBufIdx = 0;
-
-static Clay_String cal_make_string(const char *s) {
-  int idx = g_evtTitleBufIdx % CAL_MAX_EVT_TITLE_BUFS;
-  strncpy(g_evtTitleBuf[idx], s, CAL_SUMMARY_LEN - 1);
-  g_evtTitleBuf[idx][CAL_SUMMARY_LEN - 1] = '\0';
-  g_evtTitleBufIdx++;
-  return (Clay_String){.length = (int32_t)strlen(g_evtTitleBuf[idx]),
-                       .chars  = g_evtTitleBuf[idx]};
-}
+// ── Component functions ──────────────────────────────────────────────────────
+#include "components/menu_item.h"
+#include "components/calendar_checkbox.h"
+#include "components/calendar_row.h"
+#include "components/event_detail.h"
 
 static void Calendar_Render(uint32_t fontId) {
   // Load events once
@@ -101,6 +89,15 @@ static void Calendar_Render(uint32_t fontId) {
   g_evtTitleBufIdx = 0;
 
   static bool menuOpen = false;
+  static int  selectedEvent = -1; // index into g_events, -1 = none
+  static uint32_t selectedEventElId = 0; // Clay element ID of clicked event
+  static bool selectedEventOnLeft = true; // true = event is left of midline, popup goes right
+
+  // Event bucketing arrays — static so previous frame's data is available for click detection
+  static int colEvents[7][CAL_MAX_EVENTS];
+  static int colEventCount[7];
+  static int alldayEvents[7][CAL_MAX_EVENTS];
+  static int alldayEventCount[7];
 
   // Toggle menu on hamburger button click
   if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("HamburgerBtn"))) &&
@@ -112,6 +109,54 @@ static void Calendar_Render(uint32_t fontId) {
       Clay_PointerOver(Clay_GetElementId(CLAY_STRING("MenuScrim"))) &&
       IsMouseButtonPressed(0)) {
     menuOpen = false;
+  }
+
+  // Toggle calendar visibility on sidebar row click
+  if (menuOpen && IsMouseButtonPressed(0)) {
+    for (int ci = 0; ci < g_calendarCount; ci++) {
+      if (Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("CalRow"), (uint32_t)ci))) {
+        g_calendars[ci].visible = !g_calendars[ci].visible;
+        break;
+      }
+    }
+  }
+
+  // Close event detail popup on click outside the card
+  if (selectedEvent >= 0 && IsMouseButtonPressed(0) &&
+      !Clay_PointerOver(Clay_GetElementId(CLAY_STRING("EvtDetailCard")))) {
+    selectedEvent = -1;
+    selectedEventElId = 0;
+  }
+
+  // Detect clicks on timed event blocks
+  if (!menuOpen && selectedEvent < 0 && IsMouseButtonPressed(0)) {
+    float midX = (float)GetScreenWidth() / 2.0f;
+    for (int i = 0; i < 7; i++) {
+      for (int ei = 0; ei < colEventCount[i]; ei++) {
+        int evtId = i * CAL_MAX_EVENTS + ei;
+        Clay_ElementId eid = Clay_GetElementIdWithIndex(CLAY_STRING("TimedEvt"), (uint32_t)evtId);
+        if (Clay_PointerOver(eid)) {
+          selectedEvent = colEvents[i][ei];
+          selectedEventElId = eid.id;
+          selectedEventOnLeft = (GetMouseX() < (int)midX);
+          goto evt_click_done;
+        }
+      }
+    }
+    // Detect clicks on all-day event blocks
+    for (int i = 0; i < 7; i++) {
+      for (int ae = 0; ae < alldayEventCount[i]; ae++) {
+        int adId = i * CAL_MAX_EVENTS + ae;
+        Clay_ElementId eid = Clay_GetElementIdWithIndex(CLAY_STRING("AllDayEvtClick"), (uint32_t)adId);
+        if (Clay_PointerOver(eid)) {
+          selectedEvent = alldayEvents[i][ae];
+          selectedEventElId = eid.id;
+          selectedEventOnLeft = (GetMouseX() < (int)midX);
+          goto evt_click_done;
+        }
+      }
+    }
+    evt_click_done:;
   }
 
   time_t now = time(NULL);
@@ -142,15 +187,6 @@ static void Calendar_Render(uint32_t fontId) {
                   days[i].tm_year == today_year);
   }
 
-  // Colors
-  Clay_Color borderGray   = {218, 220, 224, 255};
-  Clay_Color primaryText  = {60,  64,  67,  255};
-  Clay_Color secondaryText= {112, 117, 122, 255};
-  Clay_Color todayBlue    = {26,  115, 232, 255};
-  Clay_Color todayTint    = {232, 240, 254, 255};
-  Clay_Color redLine      = {234, 67,  53,  255};
-  Clay_Color white        = {255, 255, 255, 255};
-
   // Current time Y offset for the red line
   float timeLineY =
       ((float)today_hour + (float)today_min / 60.0f) * CAL_HOUR_HEIGHT;
@@ -162,18 +198,12 @@ static void Calendar_Render(uint32_t fontId) {
   }
 
   // ── Bucket timed events per column ─────────────────────────────────────────
-  // For each column store indices of matching timed events
-  int colEvents[7][CAL_MAX_EVENTS];
-  int colEventCount[7];
   memset(colEventCount, 0, sizeof(colEventCount));
-
-  // Bucket all-day events per column
-  int alldayEvents[7][CAL_MAX_EVENTS];
-  int alldayEventCount[7];
   memset(alldayEventCount, 0, sizeof(alldayEventCount));
 
   for (int ei = 0; ei < g_eventCount; ei++) {
     const CalEvent *ev = &g_events[ei];
+    if (!g_calendars[ev->calendarIndex].visible) continue;
     if (ev->allDay) {
       for (int i = 0; i < 7; i++) {
         // days[i].tm_mon is 0-based; ev->startMon is 1-based
@@ -207,7 +237,7 @@ static void Calendar_Render(uint32_t fontId) {
                               .height = CLAY_SIZING_GROW(0)},
                    .layoutDirection = CLAY_TOP_TO_BOTTOM,
                },
-           .backgroundColor = white,
+           .backgroundColor = cal_white,
        }) {
 
     // ── Day Header Row ──
@@ -218,7 +248,7 @@ static void Calendar_Render(uint32_t fontId) {
                      .sizing = {.width = CLAY_SIZING_GROW(0),
                                 .height = CLAY_SIZING_FIXED(CAL_HEADER_HEIGHT)},
                  },
-             .border = {.color = borderGray, .width = {.bottom = 1}},
+             .border = {.color = cal_borderGray, .width = {.bottom = 1}},
          }) {
 
       // Hamburger menu button (aligned with time labels gutter)
@@ -269,7 +299,7 @@ static void Calendar_Render(uint32_t fontId) {
                                             .y = CLAY_ALIGN_Y_CENTER},
                          .childGap = 2,
                      },
-                 .border = {.color = borderGray, .width = {.left = 1}},
+                 .border = {.color = cal_borderGray, .width = {.left = 1}},
              }) {
 
           // Day name (e.g. "Mon")
@@ -277,7 +307,7 @@ static void Calendar_Render(uint32_t fontId) {
                     CLAY_TEXT_CONFIG({
                         .fontId    = fontId,
                         .fontSize  = 12,
-                        .textColor = isToday[i] ? todayBlue : secondaryText,
+                        .textColor = isToday[i] ? cal_todayBlue : cal_secondaryText,
                     }));
 
           // Day number — blue circle if today
@@ -291,20 +321,20 @@ static void Calendar_Render(uint32_t fontId) {
                              .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
                                                 .y = CLAY_ALIGN_Y_CENTER},
                          },
-                     .backgroundColor = todayBlue,
+                     .backgroundColor = cal_todayBlue,
                      .cornerRadius = CLAY_CORNER_RADIUS(18),
                  }) {
               CLAY_TEXT(dayNum, CLAY_TEXT_CONFIG({
                                     .fontId    = fontId,
                                     .fontSize  = 20,
-                                    .textColor = white,
+                                    .textColor = cal_white,
                                 }));
             }
           } else {
             CLAY_TEXT(dayNum, CLAY_TEXT_CONFIG({
                                   .fontId    = fontId,
                                   .fontSize  = 20,
-                                  .textColor = primaryText,
+                                  .textColor = cal_primaryText,
                               }));
           }
         }
@@ -319,7 +349,7 @@ static void Calendar_Render(uint32_t fontId) {
                      .sizing = {.width = CLAY_SIZING_GROW(0),
                                 .height = CLAY_SIZING_FIT(CAL_ALLDAY_HEIGHT)},
                  },
-             .border = {.color = borderGray, .width = {.bottom = 1}},
+             .border = {.color = cal_borderGray, .width = {.bottom = 1}},
          }) {
 
       // Gutter spacer
@@ -344,14 +374,16 @@ static void Calendar_Render(uint32_t fontId) {
                          .childGap = 2,
                          .padding = {2, 2, 2, 2},
                      },
-                 .border = {.color = borderGray, .width = {.left = 1}},
+                 .border = {.color = cal_borderGray, .width = {.left = 1}},
              }) {
           for (int ae = 0; ae < alldayEventCount[i]; ae++) {
             const CalEvent *ev = &g_events[alldayEvents[i][ae]];
-            EventColors ec = Calendar_EventColorForId(ev->colorId);
+            Clay_Color calColor = Calendar_GetCalendarColor(ev->calendarIndex);
+            EventColors ec = {calColor, {255, 255, 255, 255}};
             Clay_String title = cal_make_string(ev->summary);
 
-            CLAY(CLAY_IDI_LOCAL("AllDayEvt", ae),
+            int adId = i * CAL_MAX_EVENTS + ae;
+            CLAY(CLAY_IDI("AllDayEvtClick", adId),
                  {
                      .layout =
                          {
@@ -422,7 +454,7 @@ static void Calendar_Render(uint32_t fontId) {
               CLAY_TEXT(label, CLAY_TEXT_CONFIG({
                                    .fontId    = fontId,
                                    .fontSize  = 11,
-                                   .textColor = secondaryText,
+                                   .textColor = cal_secondaryText,
                                }));
             }
           }
@@ -440,7 +472,7 @@ static void Calendar_Render(uint32_t fontId) {
 
           // 7 day columns
           for (int i = 0; i < 7; i++) {
-            Clay_Color colBg = isToday[i] ? todayTint : white;
+            Clay_Color colBg = isToday[i] ? cal_todayTint : cal_white;
 
             CLAY(CLAY_IDI("DayColumn", i),
                  {
@@ -451,7 +483,7 @@ static void Calendar_Render(uint32_t fontId) {
                              .layoutDirection = CLAY_TOP_TO_BOTTOM,
                          },
                      .backgroundColor = colBg,
-                     .border = {.color = borderGray, .width = {.left = 1}},
+                     .border = {.color = cal_borderGray, .width = {.left = 1}},
                  }) {
               // 24 hour slots
               for (int h = 0; h < 24; h++) {
@@ -462,7 +494,7 @@ static void Calendar_Render(uint32_t fontId) {
                                  .sizing = {.width  = CLAY_SIZING_GROW(0),
                                             .height = CLAY_SIZING_FIXED(CAL_HOUR_HEIGHT)},
                              },
-                         .border = {.color = borderGray, .width = {.top = 1}},
+                         .border = {.color = cal_borderGray, .width = {.top = 1}},
                      }) {}
               }
             }
@@ -470,7 +502,8 @@ static void Calendar_Render(uint32_t fontId) {
             // ── Timed event blocks for this column (floating) ──
             for (int ei = 0; ei < colEventCount[i]; ei++) {
               const CalEvent *ev = &g_events[colEvents[i][ei]];
-              EventColors ec = Calendar_EventColorForId(ev->colorId);
+              Clay_Color calColor = Calendar_GetCalendarColor(ev->calendarIndex);
+              EventColors ec = {calColor, {255, 255, 255, 255}};
 
               float startHour = timed_event_hour(ev->startTime);
               float endHour   = timed_event_hour(ev->endTime);
@@ -538,7 +571,7 @@ static void Calendar_Render(uint32_t fontId) {
                              .sizing = {.width  = CLAY_SIZING_GROW(0),
                                         .height = CLAY_SIZING_FIXED(2)},
                          },
-                     .backgroundColor = redLine,
+                     .backgroundColor = cal_redLine,
                      .floating =
                          {
                              .attachTo = CLAY_ATTACH_TO_PARENT,
@@ -555,7 +588,7 @@ static void Calendar_Render(uint32_t fontId) {
                                .sizing = {.width  = CLAY_SIZING_FIXED(12),
                                           .height = CLAY_SIZING_FIXED(12)},
                            },
-                       .backgroundColor = redLine,
+                       .backgroundColor = cal_redLine,
                        .cornerRadius = CLAY_CORNER_RADIUS(6),
                        .floating =
                            {
@@ -601,8 +634,8 @@ static void Calendar_Render(uint32_t fontId) {
                      .layoutDirection = CLAY_TOP_TO_BOTTOM,
                      .padding = {0, 0, 8, 8},
                  },
-             .backgroundColor = white,
-             .border = {.color = borderGray, .width = {.right = 1}},
+             .backgroundColor = cal_white,
+             .border = {.color = cal_borderGray, .width = {.right = 1}},
              .floating =
                  {
                      .attachTo     = CLAY_ATTACH_TO_ROOT,
@@ -613,35 +646,49 @@ static void Calendar_Render(uint32_t fontId) {
                  },
          }) {
 
-      // Menu items
-      const char *menuItems[] = {"Settings", "About"};
-      for (int mi = 0; mi < 2; mi++) {
-        CLAY(CLAY_IDI("MenuItem", mi),
-             {
-                 .layout =
-                     {
-                         .sizing = {.width  = CLAY_SIZING_GROW(0),
-                                    .height = CLAY_SIZING_FIXED(44)},
-                         .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
-                         .padding = {16, 16, 0, 0},
-                     },
-                 .backgroundColor = Clay_Hovered()
-                                        ? (Clay_Color){232, 240, 254, 255}
-                                        : (Clay_Color){0, 0, 0, 0},
-                 .cornerRadius = CLAY_CORNER_RADIUS(4),
-             }) {
-          Clay_String itemText = {
-              .length = (int32_t)strlen(menuItems[mi]),
-              .chars  = menuItems[mi],
-          };
-          CLAY_TEXT(itemText, CLAY_TEXT_CONFIG({
+      // "My calendars" section header
+      CLAY(CLAY_ID("CalSectionHeader"),
+           {
+               .layout =
+                   {
+                       .sizing = {.width  = CLAY_SIZING_GROW(0),
+                                  .height = CLAY_SIZING_FIXED(36)},
+                       .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
+                       .padding = {16, 16, 0, 0},
+                   },
+           }) {
+        CLAY_TEXT(CLAY_STRING("My calendars"), CLAY_TEXT_CONFIG({
                                   .fontId    = fontId,
-                                  .fontSize  = 14,
-                                  .textColor = primaryText,
+                                  .fontSize  = 12,
+                                  .textColor = cal_secondaryText,
                               }));
-        }
       }
+
+      // Calendar rows with checkboxes
+      for (int ci = 0; ci < g_calendarCount; ci++) {
+        CalendarRow(ci, fontId);
+      }
+
+      // Divider between calendar list and menu items
+      CLAY(CLAY_ID("CalDivider"),
+           {
+               .layout =
+                   {
+                       .sizing = {.width  = CLAY_SIZING_GROW(0),
+                                  .height = CLAY_SIZING_FIXED(1)},
+                   },
+               .backgroundColor = cal_borderGray,
+           }) {}
+
+      // Menu items
+      MenuItem(0, "Settings", fontId);
+      MenuItem(1, "About", fontId);
     }
+  }
+
+  // ── Event Detail Popup (anchored to clicked event) ──
+  if (selectedEvent >= 0 && selectedEvent < g_eventCount && selectedEventElId != 0) {
+    EventDetail(&g_events[selectedEvent], fontId, selectedEventElId, selectedEventOnLeft);
   }
 }
 

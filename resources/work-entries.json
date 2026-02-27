@@ -1,9 +1,9 @@
 {
   "kind": "calendar#events",
-  "etag": "\"abc123def456\"",
-  "summary": "john.doe@gmail.com",
+  "etag": "\"work123def456\"",
+  "summary": "john.doe@company.com",
   "updated": "2026-02-27T10:00:00.000Z",
-  "timeZone": "America/New_York",
+  "timeZone": "Europe/Budapest",
   "accessRole": "owner",
   "nextSyncToken": "CMC4xN3h2QoSBGpvaG4YAQ==",
   "items": [
@@ -27,12 +27,12 @@
         "self": true
       },
       "start": {
-        "dateTime": "2026-02-27T09:00:00-05:00",
-        "timeZone": "America/New_York"
+        "dateTime": "2026-02-27T09:00:00+01:00",
+        "timeZone": "Europe/Budapest"
       },
       "end": {
-        "dateTime": "2026-02-27T09:30:00-05:00",
-        "timeZone": "America/New_York"
+        "dateTime": "2026-02-27T09:30:00+01:00",
+        "timeZone": "Europe/Budapest"
       },
       "recurrence": [
         "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
@@ -78,12 +78,12 @@
         "email": "jane.smith@gmail.com"
       },
       "start": {
-        "dateTime": "2026-02-27T13:00:00-05:00",
-        "timeZone": "America/New_York"
+        "dateTime": "2026-02-27T13:00:00+01:00",
+        "timeZone": "Europe/Budapest"
       },
       "end": {
-        "dateTime": "2026-02-27T14:30:00-05:00",
-        "timeZone": "America/New_York"
+        "dateTime": "2026-02-27T14:30:00+01:00",
+        "timeZone": "Europe/Budapest"
       },
       "iCalUID": "evt002@google.com",
       "sequence": 0,
@@ -120,81 +120,6 @@
           {
             "method": "popup",
             "minutes": 10
-          }
-        ]
-      },
-      "eventType": "default"
-    },
-    {
-      "kind": "calendar#event",
-      "etag": "\"3012345678902000\"",
-      "id": "evt003",
-      "status": "confirmed",
-      "htmlLink": "https://www.google.com/calendar/event?eid=evt003",
-      "created": "2026-02-15T08:00:00.000Z",
-      "updated": "2026-02-15T08:00:00.000Z",
-      "summary": "Lunch with Alex",
-      "creator": {
-        "email": "john.doe@gmail.com",
-        "self": true
-      },
-      "organizer": {
-        "email": "john.doe@gmail.com",
-        "self": true
-      },
-      "start": {
-        "dateTime": "2026-02-27T12:00:00-05:00",
-        "timeZone": "America/New_York"
-      },
-      "end": {
-        "dateTime": "2026-02-27T13:00:00-05:00",
-        "timeZone": "America/New_York"
-      },
-      "iCalUID": "evt003@google.com",
-      "sequence": 0,
-      "reminders": {
-        "useDefault": true
-      },
-      "eventType": "default"
-    },
-    {
-      "kind": "calendar#event",
-      "etag": "\"3012345678903000\"",
-      "id": "evt004",
-      "status": "confirmed",
-      "htmlLink": "https://www.google.com/calendar/event?eid=evt004",
-      "created": "2026-02-22T11:00:00.000Z",
-      "updated": "2026-02-22T11:00:00.000Z",
-      "summary": "Dentist Appointment",
-      "location": "123 Main St, Suite 200",
-      "creator": {
-        "email": "john.doe@gmail.com",
-        "self": true
-      },
-      "organizer": {
-        "email": "john.doe@gmail.com",
-        "self": true
-      },
-      "start": {
-        "dateTime": "2026-02-28T10:00:00-05:00",
-        "timeZone": "America/New_York"
-      },
-      "end": {
-        "dateTime": "2026-02-28T11:00:00-05:00",
-        "timeZone": "America/New_York"
-      },
-      "iCalUID": "evt004@google.com",
-      "sequence": 0,
-      "reminders": {
-        "useDefault": false,
-        "overrides": [
-          {
-            "method": "popup",
-            "minutes": 60
-          },
-          {
-            "method": "email",
-            "minutes": 1440
           }
         ]
       },
@@ -249,12 +174,12 @@
         "email": "manager@gmail.com"
       },
       "start": {
-        "dateTime": "2026-02-23T15:00:00-05:00",
-        "timeZone": "America/New_York"
+        "dateTime": "2026-02-23T15:00:00+01:00",
+        "timeZone": "Europe/Budapest"
       },
       "end": {
-        "dateTime": "2026-02-23T15:30:00-05:00",
-        "timeZone": "America/New_York"
+        "dateTime": "2026-02-23T15:30:00+01:00",
+        "timeZone": "Europe/Budapest"
       },
       "recurrence": [
         "RRULE:FREQ=WEEKLY;BYDAY=MO"
@@ -273,40 +198,6 @@
           "responseStatus": "accepted"
         }
       ],
-      "reminders": {
-        "useDefault": true
-      },
-      "eventType": "default"
-    },
-    {
-      "kind": "calendar#event",
-      "etag": "\"3012345678906000\"",
-      "id": "evt007",
-      "status": "confirmed",
-      "htmlLink": "https://www.google.com/calendar/event?eid=evt007",
-      "created": "2026-02-26T20:00:00.000Z",
-      "updated": "2026-02-26T20:00:00.000Z",
-      "summary": "Yoga Class",
-      "location": "Downtown Fitness Center",
-      "colorId": "2",
-      "creator": {
-        "email": "john.doe@gmail.com",
-        "self": true
-      },
-      "organizer": {
-        "email": "john.doe@gmail.com",
-        "self": true
-      },
-      "start": {
-        "dateTime": "2026-03-01T07:00:00-05:00",
-        "timeZone": "America/New_York"
-      },
-      "end": {
-        "dateTime": "2026-03-01T08:00:00-05:00",
-        "timeZone": "America/New_York"
-      },
-      "iCalUID": "evt007@google.com",
-      "sequence": 0,
       "reminders": {
         "useDefault": true
       },

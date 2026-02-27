@@ -9,6 +9,9 @@ CalEvent g_events[CAL_MAX_EVENTS];
 int g_eventCount = 0;
 bool g_eventsLoaded = false;
 
+LinkedCalendar g_calendars[CAL_MAX_CALENDARS];
+int g_calendarCount = 0;
+
 // Parse "2026-02-27T09:00:00-05:00" -> time_t UTC
 // or    "2026-02-27T09:00:00Z"      -> time_t UTC
 static time_t parse_datetime(const char *s) {
@@ -61,15 +64,28 @@ static void parse_date(const char *s, int *year, int *mon, int *mday) {
   sscanf(s, "%d-%d-%d", year, mon, mday);
 }
 
-void Calendar_LoadEvents(void) {
-  if (g_eventsLoaded)
-    return;
-  g_eventsLoaded = true;
-  g_eventCount = 0;
+void Calendar_InitCalendars(void) {
+  g_calendarCount = 0;
 
-  FILE *f = fopen("resources/entries.json", "r");
+  // Private calendar — basil green
+  LinkedCalendar *priv = &g_calendars[g_calendarCount++];
+  strncpy(priv->name, "Private", CAL_NAME_LEN - 1);
+  strncpy(priv->filePath, "resources/private-entries.json", CAL_PATH_LEN - 1);
+  priv->colorR = 11;  priv->colorG = 128; priv->colorB = 67; priv->colorA = 255;
+  priv->visible = true;
+
+  // Work calendar — blueberry
+  LinkedCalendar *work = &g_calendars[g_calendarCount++];
+  strncpy(work->name, "Work", CAL_NAME_LEN - 1);
+  strncpy(work->filePath, "resources/work-entries.json", CAL_PATH_LEN - 1);
+  work->colorR = 63;  work->colorG = 81;  work->colorB = 181; work->colorA = 255;
+  work->visible = true;
+}
+
+static void load_events_from_file(const char *path, int calIndex) {
+  FILE *f = fopen(path, "r");
   if (!f) {
-    fprintf(stderr, "Could not open resources/entries.json\n");
+    fprintf(stderr, "Could not open %s\n", path);
     return;
   }
 
@@ -102,10 +118,21 @@ void Calendar_LoadEvents(void) {
       break;
 
     CalEvent ev = {0};
+    ev.calendarIndex = calIndex;
 
     const cJSON *summary = cJSON_GetObjectItemCaseSensitive(item, "summary");
     if (cJSON_IsString(summary) && summary->valuestring) {
       strncpy(ev.summary, summary->valuestring, CAL_SUMMARY_LEN - 1);
+    }
+
+    const cJSON *desc = cJSON_GetObjectItemCaseSensitive(item, "description");
+    if (cJSON_IsString(desc) && desc->valuestring) {
+      strncpy(ev.description, desc->valuestring, CAL_DESC_LEN - 1);
+    }
+
+    const cJSON *loc = cJSON_GetObjectItemCaseSensitive(item, "location");
+    if (cJSON_IsString(loc) && loc->valuestring) {
+      strncpy(ev.location, loc->valuestring, CAL_LOC_LEN - 1);
     }
 
     const cJSON *colorId = cJSON_GetObjectItemCaseSensitive(item, "colorId");
@@ -150,4 +177,18 @@ void Calendar_LoadEvents(void) {
   }
 
   cJSON_Delete(root);
+}
+
+void Calendar_LoadEvents(void) {
+  if (g_eventsLoaded)
+    return;
+  g_eventsLoaded = true;
+  g_eventCount = 0;
+
+  if (g_calendarCount == 0)
+    Calendar_InitCalendars();
+
+  for (int i = 0; i < g_calendarCount; i++) {
+    load_events_from_file(g_calendars[i].filePath, i);
+  }
 }
