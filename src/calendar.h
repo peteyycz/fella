@@ -18,7 +18,7 @@ static const char *HOUR_LABELS[] = {
 
 #define CAL_HOUR_HEIGHT 96.0f
 #define CAL_GUTTER_WIDTH 80.0f
-#define CAL_HEADER_HEIGHT 120.0f
+#define CAL_HEADER_HEIGHT 88.0f
 #define CAL_ALLDAY_HEIGHT 48.0f
 #define CAL_GRID_TOTAL_HEIGHT (24.0f * CAL_HOUR_HEIGHT)
 
@@ -30,21 +30,24 @@ typedef struct {
 } EventColors;
 
 static EventColors Calendar_EventColorForId(int colorId) {
-  Clay_Color bk = {20, 20, 20, 255};
-  Clay_Color wt = {255, 250, 240, 255};
+  Clay_Color tx = g_theme.text;
+  Clay_Color bg = g_theme.base;
   switch (colorId) {
-  case 1:  return (EventColors){{160, 120, 255, 255}, bk}; // lavender
-  case 2:  return (EventColors){{  0, 220,  80, 255}, bk}; // sage
-  case 3:  return (EventColors){{180,  30, 120, 255}, wt}; // grape
-  case 4:  return (EventColors){{255, 100,  70, 255}, bk}; // flamingo
-  case 5:  return (EventColors){{255, 220,   0, 255}, bk}; // banana
-  case 6:  return (EventColors){{ 50, 200, 160, 255}, bk}; // sage (alias)
-  case 7:  return (EventColors){{  0, 150, 255, 255}, bk}; // peacock
-  case 8:  return (EventColors){{ 70,  50, 220, 255}, wt}; // blueberry
-  case 9:  return (EventColors){{  0, 160,  30, 255}, wt}; // basil
-  case 10: return (EventColors){{240,  30,  30, 255}, wt}; // tomato
-  case 11: return (EventColors){{255, 160,   0, 255}, bk}; // tangerine
-  default: return (EventColors){{  0, 100, 255, 255}, bk}; // default blue
+  case 1:  return (EventColors){g_theme.iris, tx};                                      // lavender
+  case 2:  return (EventColors){g_theme.foam, tx};                                      // sage
+  case 3:  return (EventColors){g_theme.love, bg};                                      // grape
+  case 4:  return (EventColors){g_theme.rose, tx};                                      // flamingo
+  case 5:  return (EventColors){g_theme.gold, tx};                                      // banana
+  case 6:  return (EventColors){g_theme.pine, bg};                                      // sage (alias)
+  case 7:  return (EventColors){                                                        // peacock
+      {(g_theme.pine.r + g_theme.foam.r) / 2,
+       (g_theme.pine.g + g_theme.foam.g) / 2,
+       (g_theme.pine.b + g_theme.foam.b) / 2, 255}, bg};
+  case 8:  return (EventColors){cal_hover_adjust(g_theme.iris, 30), bg};                // blueberry
+  case 9:  return (EventColors){cal_hover_adjust(g_theme.pine, 20), bg};                // basil
+  case 10: return (EventColors){cal_hover_adjust(g_theme.love, 20), bg};                // tomato
+  case 11: return (EventColors){cal_hover_adjust(g_theme.gold, 15), tx};                // tangerine
+  default: return (EventColors){g_theme.pine, bg};                                      // default blue
   }
 }
 
@@ -54,11 +57,9 @@ static EventColors Calendar_ResolveEventColor(const CalEvent *ev) {
     return Calendar_EventColorForId(ev->colorId);
   }
   Clay_Color calColor = Calendar_GetCalendarColor(ev->calendarIndex);
-  // Pick white or dark text based on perceived brightness
+  // Pick text or base text based on perceived brightness
   float lum = 0.299f * calColor.r + 0.587f * calColor.g + 0.114f * calColor.b;
-  Clay_Color textColor = (lum > 150.0f)
-      ? (Clay_Color){20, 20, 20, 255}
-      : (Clay_Color){255, 250, 240, 255};
+  Clay_Color textColor = (lum > 150.0f) ? g_theme.text : g_theme.base;
   return (EventColors){calColor, textColor};
 }
 
@@ -332,7 +333,7 @@ static void Calendar_Render(uint32_t fontId) {
                            .sizing = {.width = CLAY_SIZING_FIXED(22),
                                       .height = CLAY_SIZING_FIXED(3)},
                        },
-                   .backgroundColor = {60, 64, 67, 255},
+                   .backgroundColor = g_theme.subtle,
 
                }) {}
         }
@@ -362,7 +363,7 @@ static void Calendar_Render(uint32_t fontId) {
           CLAY_TEXT(dayName,
                     CLAY_TEXT_CONFIG({
                         .fontId    = fontId,
-                        .fontSize  = 20,
+                        .fontSize  = 16,
                         .textColor = isToday[i] ? cal_accentBlue : cal_secondaryText,
                     }));
 
@@ -372,25 +373,25 @@ static void Calendar_Render(uint32_t fontId) {
                  {
                      .layout =
                          {
-                             .sizing = {.width = CLAY_SIZING_FIXED(48),
-                                        .height = CLAY_SIZING_FIXED(48)},
+                             .sizing = {.width = CLAY_SIZING_FIXED(36),
+                                        .height = CLAY_SIZING_FIXED(36)},
                              .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
                                                 .y = CLAY_ALIGN_Y_CENTER},
                          },
                      .backgroundColor = cal_accentBlue,
-                     .cornerRadius = CLAY_CORNER_RADIUS(24),
+                     .cornerRadius = CLAY_CORNER_RADIUS(18),
 
                  }) {
               CLAY_TEXT(dayNum, CLAY_TEXT_CONFIG({
                                     .fontId    = fontId,
-                                    .fontSize  = 32,
+                                    .fontSize  = 24,
                                     .textColor = cal_cream,
                                 }));
             }
           } else {
             CLAY_TEXT(dayNum, CLAY_TEXT_CONFIG({
                                   .fontId    = fontId,
-                                  .fontSize  = 32,
+                                  .fontSize  = 24,
                                   .textColor = cal_primaryText,
                               }));
           }
@@ -471,11 +472,12 @@ static void Calendar_Render(uint32_t fontId) {
                        .backgroundColor = cal_event_bg(ec.bg),
                        .border = {.color = ec.bg, .width = {.left = 3}},
                        .cornerRadius = CLAY_CORNER_RADIUS(4),
+                       .clip = {.vertical = true, .horizontal = true},
 
                    }) {
                 CLAY_TEXT(title, CLAY_TEXT_CONFIG({
                                      .fontId    = fontId,
-                                     .fontSize  = 22,
+                                     .fontSize  = 16,
                                      .textColor = cal_primaryText,
                                  }));
               }
@@ -532,7 +534,7 @@ static void Calendar_Render(uint32_t fontId) {
                                    .chars  = HOUR_LABELS[h]};
               CLAY_TEXT(label, CLAY_TEXT_CONFIG({
                                    .fontId    = fontId,
-                                   .fontSize  = 18,
+                                   .fontSize  = 14,
                                    .textColor = cal_secondaryText,
                                }));
             }
@@ -621,6 +623,7 @@ static void Calendar_Render(uint32_t fontId) {
                        .backgroundColor = cal_event_bg(ec.bg),
                        .border = {.color = ec.bg, .width = {.left = 3}},
                        .cornerRadius = CLAY_CORNER_RADIUS(6),
+                       .clip = {.vertical = true, .horizontal = true},
                        .floating =
                            {
                                .attachTo      = CLAY_ATTACH_TO_ELEMENT_WITH_ID,
@@ -634,7 +637,7 @@ static void Calendar_Render(uint32_t fontId) {
                    }) {
                 CLAY_TEXT(title, CLAY_TEXT_CONFIG({
                                      .fontId    = fontId,
-                                     .fontSize  = 24,
+                                     .fontSize  = 18,
                                      .textColor = cal_primaryText,
                                  }));
               }
@@ -693,7 +696,7 @@ static void Calendar_Render(uint32_t fontId) {
                      .sizing = {.width  = CLAY_SIZING_GROW(0),
                                 .height = CLAY_SIZING_GROW(0)},
                  },
-             .backgroundColor = {0, 0, 0, 120},
+             .backgroundColor = {g_theme.overlay.r, g_theme.overlay.g, g_theme.overlay.b, 160},
              .floating =
                  {
                      .attachTo = CLAY_ATTACH_TO_ROOT,
@@ -730,14 +733,14 @@ static void Calendar_Render(uint32_t fontId) {
                .layout =
                    {
                        .sizing = {.width  = CLAY_SIZING_GROW(0),
-                                  .height = CLAY_SIZING_FIXED(56)},
+                                  .height = CLAY_SIZING_FIXED(42)},
                        .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
                        .padding = {16, 16, 0, 0},
                    },
            }) {
         CLAY_TEXT(CLAY_STRING("My calendars"), CLAY_TEXT_CONFIG({
                                   .fontId    = fontId,
-                                  .fontSize  = 20,
+                                  .fontSize  = 16,
                                   .textColor = cal_secondaryText,
                               }));
       }

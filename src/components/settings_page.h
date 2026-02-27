@@ -1,6 +1,7 @@
 #ifndef COMPONENT_SETTINGS_PAGE_H
 #define COMPONENT_SETTINGS_PAGE_H
 
+#include "app_config.h"
 #include "cal_common.h"
 #include "google_auth.h"
 #include "oauth_server.h"
@@ -56,6 +57,11 @@ static void SettingsPage_Render(uint32_t fontId) {
       OAuthServer_Stop();
       g_authState = AUTH_READY;
     }
+    // Theme toggle
+    if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("ThemeToggleBtn")))) {
+      Theme_Set(!g_themeDark);
+      AppConfig_Save();
+    }
   }
 
   CLAY(CLAY_ID("SettingsPage"),
@@ -75,10 +81,10 @@ static void SettingsPage_Render(uint32_t fontId) {
              .layout =
                  {
                      .sizing = {.width = CLAY_SIZING_GROW(0),
-                                .height = CLAY_SIZING_FIXED(80)},
+                                .height = CLAY_SIZING_FIXED(56)},
                      .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
                      .padding = {16, 16, 0, 0},
-                     .childGap = 16,
+                     .childGap = 12,
                  },
              .backgroundColor = cal_cream,
              .border = {.color = cal_borderColor, .width = {.bottom = 1}},
@@ -88,8 +94,8 @@ static void SettingsPage_Render(uint32_t fontId) {
           {
               .layout =
                   {
-                      .sizing = {.width = CLAY_SIZING_FIXED(48),
-                                 .height = CLAY_SIZING_FIXED(48)},
+                      .sizing = {.width = CLAY_SIZING_FIXED(36),
+                                 .height = CLAY_SIZING_FIXED(36)},
                       .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
                                          .y = CLAY_ALIGN_Y_CENTER},
                   },
@@ -100,13 +106,13 @@ static void SettingsPage_Render(uint32_t fontId) {
           }) {
         CLAY_TEXT(CLAY_STRING("<"), CLAY_TEXT_CONFIG({
                                         .fontId = fontId,
-                                        .fontSize = 24,
+                                        .fontSize = 18,
                                         .textColor = cal_primaryText,
                                     }));
       }
       CLAY_TEXT(CLAY_STRING("Settings"), CLAY_TEXT_CONFIG({
                                              .fontId = fontId,
-                                             .fontSize = 28,
+                                             .fontSize = 20,
                                              .textColor = cal_primaryText,
                                          }));
     }
@@ -124,11 +130,74 @@ static void SettingsPage_Render(uint32_t fontId) {
                  },
          }) {
 
+      // ── Theme section ──
+      CLAY_TEXT(CLAY_STRING("Theme"),
+                CLAY_TEXT_CONFIG({
+                    .fontId = fontId,
+                    .fontSize = 18,
+                    .textColor = cal_primaryText,
+                }));
+
+      CLAY(CLAY_ID("ThemeToggleRow"),
+           {
+               .layout =
+                   {
+                       .sizing = {.width = CLAY_SIZING_GROW(0),
+                                  .height = CLAY_SIZING_FIT(0)},
+                       .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
+                       .childGap = 12,
+                   },
+           }) {
+        CLAY_TEXT(CLAY_STRING("Appearance:"),
+                  CLAY_TEXT_CONFIG({
+                      .fontId = fontId,
+                      .fontSize = 16,
+                      .textColor = cal_secondaryText,
+                  }));
+
+        CLAY(CLAY_ID("ThemeToggleBtn"),
+             {
+                 .layout =
+                     {
+                         .sizing = {.width = CLAY_SIZING_FIXED(140),
+                                    .height = CLAY_SIZING_FIXED(36)},
+                         .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
+                                            .y = CLAY_ALIGN_Y_CENTER},
+                     },
+                 .backgroundColor =
+                     Clay_Hovered()
+                         ? cal_hover_darken(g_theme.highlightMed, 15)
+                         : g_theme.highlightMed,
+                 .border = {.color = cal_borderColor,
+                            .width = CLAY_BORDER_ALL(1)},
+                 .cornerRadius = CLAY_CORNER_RADIUS(8),
+             }) {
+          CLAY_TEXT(g_themeDark ? CLAY_STRING("Moon (Dark)")
+                               : CLAY_STRING("Dawn (Light)"),
+                    CLAY_TEXT_CONFIG({
+                        .fontId = fontId,
+                        .fontSize = 16,
+                        .textColor = cal_primaryText,
+                    }));
+        }
+      }
+
+      // Divider
+      CLAY(CLAY_ID("ThemeDivider"),
+           {
+               .layout =
+                   {
+                       .sizing = {.width = CLAY_SIZING_GROW(0),
+                                  .height = CLAY_SIZING_FIXED(1)},
+                   },
+               .backgroundColor = cal_borderColor,
+           }) {}
+
       // Section header
       CLAY_TEXT(CLAY_STRING("Google Calendar"),
                 CLAY_TEXT_CONFIG({
                     .fontId = fontId,
-                    .fontSize = 24,
+                    .fontSize = 18,
                     .textColor = cal_primaryText,
                 }));
 
@@ -138,8 +207,8 @@ static void SettingsPage_Render(uint32_t fontId) {
              {
                  .layout =
                      {
-                         .sizing = {.width = CLAY_SIZING_FIXED(280),
-                                    .height = CLAY_SIZING_FIXED(48)},
+                         .sizing = {.width = CLAY_SIZING_FIXED(240),
+                                    .height = CLAY_SIZING_FIXED(40)},
                          .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
                                             .y = CLAY_ALIGN_Y_CENTER},
                      },
@@ -154,7 +223,7 @@ static void SettingsPage_Render(uint32_t fontId) {
               CLAY_STRING("Connect Google Calendar"),
               CLAY_TEXT_CONFIG({
                   .fontId = fontId,
-                  .fontSize = 20,
+                  .fontSize = 16,
                   .textColor = cal_cream,
               }));
         }
@@ -167,7 +236,7 @@ static void SettingsPage_Render(uint32_t fontId) {
                         "browser."),
             CLAY_TEXT_CONFIG({
                 .fontId = fontId,
-                .fontSize = 18,
+                .fontSize = 14,
                 .textColor = cal_secondaryText,
                 .wrapMode = CLAY_TEXT_WRAP_WORDS,
             }));
@@ -177,20 +246,20 @@ static void SettingsPage_Render(uint32_t fontId) {
                  .layout =
                      {
                          .sizing = {.width = CLAY_SIZING_FIXED(120),
-                                    .height = CLAY_SIZING_FIXED(44)},
+                                    .height = CLAY_SIZING_FIXED(36)},
                          .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
                                             .y = CLAY_ALIGN_Y_CENTER},
                      },
                  .backgroundColor = Clay_Hovered()
-                                        ? cal_hover_darken((Clay_Color){200, 200, 200, 255}, 15)
-                                        : (Clay_Color){200, 200, 200, 255},
+                                        ? cal_hover_darken(g_theme.highlightMed, 15)
+                                        : g_theme.highlightMed,
                  .border = {.color = cal_borderColor,
                             .width = CLAY_BORDER_ALL(1)},
                  .cornerRadius = CLAY_CORNER_RADIUS(8),
              }) {
           CLAY_TEXT(CLAY_STRING("Cancel"), CLAY_TEXT_CONFIG({
                                                .fontId = fontId,
-                                               .fontSize = 20,
+                                               .fontSize = 16,
                                                .textColor = cal_primaryText,
                                            }));
         }
@@ -208,7 +277,7 @@ static void SettingsPage_Render(uint32_t fontId) {
                          .childGap = 8,
                      },
              }) {
-          // Green dot
+          // Status dot
           CLAY(CLAY_ID("GoogleStatusDot"),
                {
                    .layout =
@@ -216,7 +285,7 @@ static void SettingsPage_Render(uint32_t fontId) {
                            .sizing = {.width = CLAY_SIZING_FIXED(12),
                                       .height = CLAY_SIZING_FIXED(12)},
                        },
-                   .backgroundColor = (Clay_Color){0, 180, 80, 255},
+                   .backgroundColor = g_theme.foam,
                    .cornerRadius = CLAY_CORNER_RADIUS(6),
                    .border = {.color = cal_borderColor,
                               .width = CLAY_BORDER_ALL(1)},
@@ -224,8 +293,8 @@ static void SettingsPage_Render(uint32_t fontId) {
           CLAY_TEXT(CLAY_STRING("Connected"),
                     CLAY_TEXT_CONFIG({
                         .fontId = fontId,
-                        .fontSize = 20,
-                        .textColor = (Clay_Color){0, 140, 60, 255},
+                        .fontSize = 16,
+                        .textColor = g_theme.foam,
                     }));
         }
 
@@ -245,7 +314,7 @@ static void SettingsPage_Render(uint32_t fontId) {
                   .layout =
                       {
                           .sizing = {.width = CLAY_SIZING_FIXED(120),
-                                     .height = CLAY_SIZING_FIXED(44)},
+                                     .height = CLAY_SIZING_FIXED(36)},
                           .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
                                              .y = CLAY_ALIGN_Y_CENTER},
                       },
@@ -260,7 +329,7 @@ static void SettingsPage_Render(uint32_t fontId) {
                 CLAY_STRING("Refresh"),
                 CLAY_TEXT_CONFIG({
                     .fontId = fontId,
-                    .fontSize = 20,
+                    .fontSize = 16,
                     .textColor = cal_cream,
                 }));
           }
@@ -271,13 +340,13 @@ static void SettingsPage_Render(uint32_t fontId) {
                    .layout =
                        {
                            .sizing = {.width = CLAY_SIZING_FIXED(140),
-                                      .height = CLAY_SIZING_FIXED(44)},
+                                      .height = CLAY_SIZING_FIXED(36)},
                            .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
                                               .y = CLAY_ALIGN_Y_CENTER},
                        },
                    .backgroundColor = Clay_Hovered()
-                                          ? cal_hover_darken((Clay_Color){240, 60, 60, 255}, 20)
-                                          : (Clay_Color){240, 60, 60, 255},
+                                          ? cal_hover_darken(g_theme.love, 20)
+                                          : g_theme.love,
                    .border = {.color = cal_borderColor,
                               .width = CLAY_BORDER_ALL(1)},
                    .cornerRadius = CLAY_CORNER_RADIUS(8),
@@ -286,7 +355,7 @@ static void SettingsPage_Render(uint32_t fontId) {
                 CLAY_STRING("Disconnect"),
                 CLAY_TEXT_CONFIG({
                     .fontId = fontId,
-                    .fontSize = 20,
+                    .fontSize = 16,
                     .textColor = cal_cream,
                 }));
           }
@@ -298,15 +367,15 @@ static void SettingsPage_Render(uint32_t fontId) {
         CLAY_TEXT(CLAY_STRING("Authentication failed:"),
                   CLAY_TEXT_CONFIG({
                       .fontId = fontId,
-                      .fontSize = 20,
-                      .textColor = (Clay_Color){220, 40, 40, 255},
+                      .fontSize = 16,
+                      .textColor = g_theme.love,
                   }));
 
         if (g_authErrorMsg[0] != '\0') {
           CLAY_TEXT(cal_make_string(g_authErrorMsg),
                     CLAY_TEXT_CONFIG({
                         .fontId = fontId,
-                        .fontSize = 16,
+                        .fontSize = 13,
                         .textColor = cal_secondaryText,
                         .wrapMode = CLAY_TEXT_WRAP_WORDS,
                     }));
@@ -317,7 +386,7 @@ static void SettingsPage_Render(uint32_t fontId) {
                  .layout =
                      {
                          .sizing = {.width = CLAY_SIZING_FIXED(140),
-                                    .height = CLAY_SIZING_FIXED(44)},
+                                    .height = CLAY_SIZING_FIXED(36)},
                          .childAlignment = {.x = CLAY_ALIGN_X_CENTER,
                                             .y = CLAY_ALIGN_Y_CENTER},
                      },
@@ -332,7 +401,7 @@ static void SettingsPage_Render(uint32_t fontId) {
               CLAY_STRING("Try Again"),
               CLAY_TEXT_CONFIG({
                   .fontId = fontId,
-                  .fontSize = 20,
+                  .fontSize = 16,
                   .textColor = cal_cream,
               }));
         }

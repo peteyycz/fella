@@ -1,5 +1,6 @@
 #include "google_auth.h"
 #include "cJSON.h"
+#include "config_dir.h"
 
 #include <curl/curl.h>
 #include <fcntl.h>
@@ -42,43 +43,10 @@ static size_t curl_write_cb(void *ptr, size_t size, size_t nmemb,
   return total;
 }
 
-// ── Config directory helpers ─────────────────────────────────────────────────
-static void get_config_dir(char *buf, size_t bufsize) {
-  const char *xdg = getenv("XDG_CONFIG_HOME");
-  if (xdg && xdg[0]) {
-    snprintf(buf, bufsize, "%s/fella", xdg);
-  } else {
-    const char *home = getenv("HOME");
-    if (!home)
-      home = "/tmp";
-    snprintf(buf, bufsize, "%s/.config/fella", home);
-  }
-}
-
 static void get_tokens_path(char *buf, size_t bufsize) {
   char dir[256];
   get_config_dir(dir, sizeof(dir));
   snprintf(buf, bufsize, "%s/tokens.json", dir);
-}
-
-static void ensure_config_dir(void) {
-  char dir[256];
-  get_config_dir(dir, sizeof(dir));
-
-  // Create parent .config if needed
-  char parent[256];
-  const char *xdg = getenv("XDG_CONFIG_HOME");
-  if (xdg && xdg[0]) {
-    strncpy(parent, xdg, sizeof(parent) - 1);
-    parent[sizeof(parent) - 1] = '\0';
-  } else {
-    const char *home = getenv("HOME");
-    if (!home)
-      home = "/tmp";
-    snprintf(parent, sizeof(parent), "%s/.config", home);
-  }
-  mkdir(parent, 0755);
-  mkdir(dir, 0755);
 }
 
 // ── Token persistence ────────────────────────────────────────────────────────

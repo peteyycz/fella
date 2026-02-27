@@ -26,7 +26,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(RAYLIB REQUIRED raylib)
 pkg_check_modules(CURL REQUIRED IMPORTED_TARGET libcurl)
 
-add_executable(fella src/main.c src/events.c src/google_auth.c src/google_calendar.c src/oauth_server.c vendor/cJSON.c)
+add_executable(fella src/main.c src/events.c src/google_auth.c src/google_calendar.c src/oauth_server.c src/app_config.c vendor/cJSON.c)
 target_include_directories(fella PRIVATE src vendor ${RAYLIB_INCLUDE_DIRS} ${CMAKE_BINARY_DIR})
 target_link_libraries(fella ${RAYLIB_LIBRARIES} PkgConfig::CURL m pthread dl)
 target_link_directories(fella PRIVATE ${RAYLIB_LIBRARY_DIRS})

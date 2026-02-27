@@ -13,7 +13,7 @@ static void CalendarRow(int ci, uint32_t fontId) {
            .layout =
                {
                    .sizing = {.width  = CLAY_SIZING_GROW(0),
-                              .height = CLAY_SIZING_FIXED(64)},
+                              .height = CLAY_SIZING_FIXED(48)},
                    .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
                    .padding = {16, 16, 0, 0},
                    .childGap = 10,
@@ -30,7 +30,7 @@ static void CalendarRow(int ci, uint32_t fontId) {
     Clay_String calName = cal_make_string(g_calendars[ci].name);
     CLAY_TEXT(calName, CLAY_TEXT_CONFIG({
                             .fontId    = fontId,
-                            .fontSize  = 22,
+                            .fontSize  = 16,
                             .textColor = cal_primaryText,
                         }));
   }

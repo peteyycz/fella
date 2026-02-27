@@ -3,6 +3,7 @@
 #include "clay.h"
 #include "clay_renderer_raylib.c"
 #include "google_auth.h"
+#include "app_config.h"
 #include "oauth_server.h"
 #include <curl/curl.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@ Clay_RenderCommandArray CreateLayout(void) {
                                     .sizing = {.width = CLAY_SIZING_GROW(0),
                                                .height = CLAY_SIZING_GROW(0)},
                                 },
-                            .backgroundColor = {252, 250, 245, 255},
+                            .backgroundColor = g_theme.base,
                         }) {
     Calendar_Render(FONT_ID_BODY_24);
   }
@@ -33,6 +34,7 @@ Clay_RenderCommandArray CreateLayout(void) {
 int main(void) {
   curl_global_init(CURL_GLOBAL_DEFAULT);
   GoogleAuth_Init();
+  AppConfig_Load();
 
   uint64_t totalMemorySize = Clay_MinMemorySize();
   Clay_Arena clayMemory = Clay_CreateArenaWithCapacityAndMemory(
