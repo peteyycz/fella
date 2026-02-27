@@ -2,6 +2,7 @@
 #include "clay.h"
 #include "clay_renderer_raylib.c"
 #include "calendar.h"
+#include <time.h>
 
 const uint32_t FONT_ID_BODY_24 = 0;
 
@@ -17,7 +18,7 @@ Clay_RenderCommandArray CreateLayout(void) {
                                     .sizing = {.width = CLAY_SIZING_GROW(0),
                                                .height = CLAY_SIZING_GROW(0)},
                                 },
-                            .backgroundColor = {240, 240, 240, 255},
+                            .backgroundColor = {245, 235, 220, 255},
                         }) {
     Calendar_Render(FONT_ID_BODY_24);
   }
@@ -36,9 +37,11 @@ int main(void) {
 
   Font fonts[1];
   fonts[FONT_ID_BODY_24] =
-      LoadFontEx("resources/Roboto-Regular.ttf", 48, 0, 400);
+      LoadFontEx("resources/SpaceMono-Bold.ttf", 48, 0, 400);
   SetTextureFilter(fonts[FONT_ID_BODY_24].texture, TEXTURE_FILTER_BILINEAR);
   Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts);
+
+  bool scrollInitialized = false;
 
   while (!WindowShouldClose()) {
     Clay_SetPointerState(
@@ -51,6 +54,25 @@ int main(void) {
         GetFrameTime());
 
     Clay_RenderCommandArray renderCommands = CreateLayout();
+
+    // Auto-scroll to current time on first frame
+    if (!scrollInitialized) {
+      Clay_ScrollContainerData scrollData =
+          Clay_GetScrollContainerData(Clay_GetElementId(CLAY_STRING("ScrollArea")));
+      if (scrollData.found && scrollData.scrollPosition) {
+        time_t now = time(NULL);
+        struct tm lt = *localtime(&now);
+        float currentTimeY = ((float)lt.tm_hour + (float)lt.tm_min / 60.0f) * CAL_HOUR_HEIGHT;
+        float viewHeight = scrollData.scrollContainerDimensions.height;
+        float headerOverlay = CAL_HEADER_HEIGHT + CAL_ALLDAY_HEIGHT;
+        float targetScroll = -(currentTimeY - (viewHeight + headerOverlay) / 2.0f);
+        float maxScroll = -(scrollData.contentDimensions.height - viewHeight);
+        if (targetScroll > 0) targetScroll = 0;
+        if (targetScroll < maxScroll) targetScroll = maxScroll;
+        scrollData.scrollPosition->y = targetScroll;
+        scrollInitialized = true;
+      }
+    }
 
     BeginDrawing();
     ClearBackground(BLACK);

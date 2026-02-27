@@ -13,14 +13,15 @@ static void CalendarRow(int ci, uint32_t fontId) {
            .layout =
                {
                    .sizing = {.width  = CLAY_SIZING_GROW(0),
-                              .height = CLAY_SIZING_FIXED(40)},
+                              .height = CLAY_SIZING_FIXED(64)},
                    .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
                    .padding = {16, 16, 0, 0},
                    .childGap = 10,
                },
            .backgroundColor = Clay_Hovered()
-                                  ? (Clay_Color){232, 240, 254, 255}
+                                  ? cal_hoverYellow
                                   : (Clay_Color){0, 0, 0, 0},
+           .border = {.color = cal_borderColor, .width = {.bottom = 1}},
 
        }) {
     CalendarCheckbox(ci, vis, calColor);
@@ -29,7 +30,7 @@ static void CalendarRow(int ci, uint32_t fontId) {
     Clay_String calName = cal_make_string(g_calendars[ci].name);
     CLAY_TEXT(calName, CLAY_TEXT_CONFIG({
                             .fontId    = fontId,
-                            .fontSize  = 14,
+                            .fontSize  = 22,
                             .textColor = cal_primaryText,
                         }));
   }

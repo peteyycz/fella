@@ -67,18 +67,18 @@ static void parse_date(const char *s, int *year, int *mon, int *mday) {
 void Calendar_InitCalendars(void) {
   g_calendarCount = 0;
 
-  // Private calendar — basil green
+  // Private calendar — hot pink
   LinkedCalendar *priv = &g_calendars[g_calendarCount++];
   strncpy(priv->name, "Private", CAL_NAME_LEN - 1);
   strncpy(priv->filePath, "resources/private-entries.json", CAL_PATH_LEN - 1);
-  priv->colorR = 11;  priv->colorG = 128; priv->colorB = 67; priv->colorA = 255;
+  priv->colorR = 255; priv->colorG = 60;  priv->colorB = 120; priv->colorA = 255;
   priv->visible = true;
 
-  // Work calendar — blueberry
+  // Work calendar — electric blue
   LinkedCalendar *work = &g_calendars[g_calendarCount++];
   strncpy(work->name, "Work", CAL_NAME_LEN - 1);
   strncpy(work->filePath, "resources/work-entries.json", CAL_PATH_LEN - 1);
-  work->colorR = 63;  work->colorG = 81;  work->colorB = 181; work->colorA = 255;
+  work->colorR = 50;  work->colorG = 120; work->colorB = 255; work->colorA = 255;
   work->visible = true;
 }
 

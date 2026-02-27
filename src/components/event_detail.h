@@ -35,17 +35,38 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
       ? (Clay_Vector2){4, 0}
       : (Clay_Vector2){-4, 0};
 
+  // Event detail shadow
+  CLAY(CLAY_ID("EvtDetailShadow"),
+       {
+           .layout =
+               {
+                   .sizing = {.width  = CLAY_SIZING_FIXED(360),
+                              .height = CLAY_SIZING_FIT(0)},
+               },
+           .backgroundColor = cal_shadowColor,
+           .floating =
+               {
+                   .attachTo      = CLAY_ATTACH_TO_ELEMENT_WITH_ID,
+                   .parentId      = Clay_GetElementId(CLAY_STRING("EvtDetailCard")).id,
+                   .attachPoints  = {.element = CLAY_ATTACH_POINT_LEFT_TOP,
+                                     .parent  = CLAY_ATTACH_POINT_LEFT_TOP},
+                   .offset        = {4, 4},
+                   .zIndex        = 299,
+                   .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+               },
+       }) {}
+
   CLAY(CLAY_ID("EvtDetailCard"),
        {
            .layout =
                {
-                   .sizing = {.width  = CLAY_SIZING_FIXED(280),
+                   .sizing = {.width  = CLAY_SIZING_FIXED(360),
                               .height = CLAY_SIZING_FIT(0)},
                    .layoutDirection = CLAY_TOP_TO_BOTTOM,
                },
-           .backgroundColor = cal_white,
+           .backgroundColor = cal_cream,
 
-           .border = {.color = cal_borderGray, .width = CLAY_BORDER_ALL(1)},
+           .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(3)},
            .floating =
                {
                    .attachTo      = CLAY_ATTACH_TO_ELEMENT_WITH_ID,
@@ -63,7 +84,7 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
              .layout =
                  {
                      .sizing = {.width  = CLAY_SIZING_GROW(0),
-                                .height = CLAY_SIZING_FIXED(6)},
+                                .height = CLAY_SIZING_FIXED(8)},
                  },
              .backgroundColor = calColor,
 
@@ -85,14 +106,14 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
       // Title
       CLAY_TEXT(cal_make_string(sel->summary), CLAY_TEXT_CONFIG({
                                    .fontId    = fontId,
-                                   .fontSize  = 16,
+                                   .fontSize  = 28,
                                    .textColor = cal_primaryText,
                                }));
 
       // Time
       CLAY_TEXT(cal_make_string(timeBuf), CLAY_TEXT_CONFIG({
                                    .fontId    = fontId,
-                                   .fontSize  = 12,
+                                   .fontSize  = 22,
                                    .textColor = cal_secondaryText,
                                }));
 
@@ -109,12 +130,12 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
              }) {
           CLAY_TEXT(CLAY_STRING("Location:"), CLAY_TEXT_CONFIG({
                                        .fontId    = fontId,
-                                       .fontSize  = 12,
+                                       .fontSize  = 22,
                                        .textColor = cal_secondaryText,
                                    }));
           CLAY_TEXT(cal_make_string(sel->location), CLAY_TEXT_CONFIG({
                                        .fontId    = fontId,
-                                       .fontSize  = 12,
+                                       .fontSize  = 22,
                                        .textColor = cal_primaryText,
                                    }));
         }
@@ -124,7 +145,7 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
       if (sel->description[0] != '\0') {
         CLAY_TEXT(cal_make_string(sel->description), CLAY_TEXT_CONFIG({
                                      .fontId    = fontId,
-                                     .fontSize  = 12,
+                                     .fontSize  = 22,
                                      .textColor = cal_primaryText,
                                      .wrapMode  = CLAY_TEXT_WRAP_WORDS,
                                  }));
@@ -136,9 +157,9 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
                .layout =
                    {
                        .sizing = {.width  = CLAY_SIZING_GROW(0),
-                                  .height = CLAY_SIZING_FIXED(1)},
+                                  .height = CLAY_SIZING_FIXED(2)},
                    },
-               .backgroundColor = cal_borderGray,
+               .backgroundColor = cal_borderColor,
            }) {}
 
       // Calendar name with colored dot
@@ -156,15 +177,16 @@ static void EventDetail(const CalEvent *sel, uint32_t fontId, uint32_t parentElI
              {
                  .layout =
                      {
-                         .sizing = {.width  = CLAY_SIZING_FIXED(10),
-                                    .height = CLAY_SIZING_FIXED(10)},
+                         .sizing = {.width  = CLAY_SIZING_FIXED(12),
+                                    .height = CLAY_SIZING_FIXED(12)},
                      },
                  .backgroundColor = calColor,
+                 .border = {.color = cal_borderColor, .width = CLAY_BORDER_ALL(1)},
 
              }) {}
         CLAY_TEXT(cal_make_string(calName), CLAY_TEXT_CONFIG({
                                      .fontId    = fontId,
-                                     .fontSize  = 12,
+                                     .fontSize  = 22,
                                      .textColor = cal_secondaryText,
                                  }));
       }

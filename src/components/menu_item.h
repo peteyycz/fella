@@ -9,13 +9,14 @@ static void MenuItem(int index, const char *text, uint32_t fontId) {
            .layout =
                {
                    .sizing = {.width  = CLAY_SIZING_GROW(0),
-                              .height = CLAY_SIZING_FIXED(44)},
+                              .height = CLAY_SIZING_FIXED(64)},
                    .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
                    .padding = {16, 16, 0, 0},
                },
            .backgroundColor = Clay_Hovered()
-                                  ? (Clay_Color){232, 240, 254, 255}
+                                  ? cal_hoverYellow
                                   : (Clay_Color){0, 0, 0, 0},
+           .border = {.color = cal_borderColor, .width = {.bottom = 1}},
 
        }) {
     Clay_String itemText = {
@@ -24,7 +25,7 @@ static void MenuItem(int index, const char *text, uint32_t fontId) {
     };
     CLAY_TEXT(itemText, CLAY_TEXT_CONFIG({
                             .fontId    = fontId,
-                            .fontSize  = 14,
+                            .fontSize  = 22,
                             .textColor = cal_primaryText,
                         }));
   }
