@@ -5,7 +5,9 @@
 #include "theme.h"
 #include "events.h"
 
+#include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 // ── Theme-aware color aliases (drop-in replacements for old constants) ───────
 #define cal_borderColor   g_theme.highlightHigh
@@ -38,6 +40,21 @@ static Clay_String cal_make_string(const char *s) {
   g_evtTitleBufIdx++;
   return (Clay_String){.length = (int32_t)strlen(g_evtTitleBuf[idx]),
                        .chars  = g_evtTitleBuf[idx]};
+}
+
+// Format an event's time range into buf. Returns buf.
+static const char *cal_format_event_time(const CalEvent *ev, char *buf,
+                                         size_t buflen) {
+  if (ev->allDay) {
+    snprintf(buf, buflen, "%04d-%02d-%02d (All day)", ev->startYear,
+             ev->startMon, ev->startMday);
+  } else {
+    struct tm st = *localtime(&ev->startTime);
+    struct tm et = *localtime(&ev->endTime);
+    snprintf(buf, buflen, "%02d:%02d - %02d:%02d", st.tm_hour, st.tm_min,
+             et.tm_hour, et.tm_min);
+  }
+  return buf;
 }
 
 static Clay_Color Calendar_GetCalendarColor(int calendarIndex) {

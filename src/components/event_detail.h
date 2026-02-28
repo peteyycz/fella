@@ -3,24 +3,12 @@
 
 #include "cal_common.h"
 
-#include <stdio.h>
-#include <time.h>
-
 static void EventDetail(const CalEvent *sel, uint32_t fontId,
                         uint32_t parentElId, bool onLeft) {
   Clay_Color calColor = Calendar_GetCalendarColor(sel->calendarIndex);
 
-  // Format time string
   static char timeBuf[64];
-  if (sel->allDay) {
-    snprintf(timeBuf, sizeof(timeBuf), "%04d-%02d-%02d (All day)",
-             sel->startYear, sel->startMon, sel->startMday);
-  } else {
-    struct tm st = *localtime(&sel->startTime);
-    struct tm et = *localtime(&sel->endTime);
-    snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d - %02d:%02d", st.tm_hour,
-             st.tm_min, et.tm_hour, et.tm_min);
-  }
+  cal_format_event_time(sel, timeBuf, sizeof(timeBuf));
 
   const char *calName =
       (sel->calendarIndex >= 0 && sel->calendarIndex < g_calendarCount)

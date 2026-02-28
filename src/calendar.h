@@ -630,15 +630,7 @@ static void Calendar_Render(uint32_t fontId) {
                 Clay_String title = cal_make_string(ev->summary);
 
                 static char timeBuf[64];
-                if (ev->allDay) {
-                  snprintf(timeBuf, sizeof(timeBuf), "%04d-%02d-%02d (All day)",
-                           ev->startYear, ev->startMon, ev->startMday);
-                } else {
-                  struct tm st = *localtime(&ev->startTime);
-                  struct tm et = *localtime(&ev->endTime);
-                  snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d - %02d:%02d",
-                           st.tm_hour, st.tm_min, et.tm_hour, et.tm_min);
-                }
+                cal_format_event_time(ev, timeBuf, sizeof(timeBuf));
                 Clay_String time = cal_make_string(timeBuf);
 
                 // Each event block is a floating element attached to
