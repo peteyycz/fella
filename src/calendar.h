@@ -113,7 +113,6 @@ static Clay_Color cal_event_bg(Clay_Color c) {
 
 // ── Component functions ──────────────────────────────────────────────────────
 #include "components/about_page.h"
-#include "components/calendar_checkbox.h"
 #include "components/calendar_row.h"
 #include "components/event_detail.h"
 #include "components/menu_item.h"
@@ -630,24 +629,37 @@ static void Calendar_Render(uint32_t fontId) {
 
                 Clay_String title = cal_make_string(ev->summary);
 
+                static char timeBuf[64];
+                if (ev->allDay) {
+                  snprintf(timeBuf, sizeof(timeBuf), "%04d-%02d-%02d (All day)",
+                           ev->startYear, ev->startMon, ev->startMday);
+                } else {
+                  struct tm st = *localtime(&ev->startTime);
+                  struct tm et = *localtime(&ev->endTime);
+                  snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d - %02d:%02d",
+                           st.tm_hour, st.tm_min, et.tm_hour, et.tm_min);
+                }
+                Clay_String time = cal_make_string(timeBuf);
+
                 // Each event block is a floating element attached to
-                // DayColumnsArea. We need its X offset too. We can't easily get
-                // the column's X from Clay at layout time, so we use a trick:
-                // attach to the DayColumnsArea and express X as a fraction by
-                // nesting. Simpler approach: use CLAY_ATTACH_TO_PARENT
-                // (DayColumnsArea) and rely on Clay knowing the column widths.
-                // Since columns are SIZING_GROW equally, each is 1/7 of the
-                // area. We'll use a floating element per event inside the
-                // DayColumnsArea. We need the actual pixel width of the column
-                // — but we can approximate by attaching to the parent element
-                // and computing x as fraction * parent_width. Clay doesn't
-                // expose that directly, so we use a simpler trick: attach to
-                // DayColumn[i] by ID and float at (0, yTop) with SIZING_GROW
-                // width.
+                // DayColumnsArea. We need its X offset too. We can't easily
+                // get the column's X from Clay at layout time, so we use a
+                // trick: attach to the DayColumnsArea and express X as a
+                // fraction by nesting. Simpler approach: use
+                // CLAY_ATTACH_TO_PARENT (DayColumnsArea) and rely on Clay
+                // knowing the column widths. Since columns are SIZING_GROW
+                // equally, each is 1/7 of the area. We'll use a floating
+                // element per event inside the DayColumnsArea. We need the
+                // actual pixel width of the column — but we can approximate
+                // by attaching to the parent element and computing x as
+                // fraction * parent_width. Clay doesn't expose that
+                // directly, so we use a simpler trick: attach to
+                // DayColumn[i] by ID and float at (0, yTop) with
+                // SIZING_GROW width.
 
                 // Use CLAY_ID_LOCAL won't work for floating with
-                // attach-to-element. Use a combined index: col*64 + ei as the
-                // IDI numeric key.
+                // attach-to-element. Use a combined index: col*64 + ei as
+                // the IDI numeric key.
                 int evtId = i * CAL_MAX_EVENTS + ei;
                 CLAY(
                     CLAY_IDI("TimedEvt", evtId),
@@ -685,6 +697,11 @@ static void Calendar_Render(uint32_t fontId) {
                                        .fontSize = 20,
                                        .textColor = cal_primaryText,
                                    }));
+                  CLAY_TEXT(time, CLAY_TEXT_CONFIG({
+                                      .fontId = fontId,
+                                      .fontSize = 20,
+                                      .textColor = cal_secondaryText,
+                                  }));
                 }
               }
             }
