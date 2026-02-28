@@ -16,6 +16,7 @@
 #define cal_redLine       g_theme.love
 #define cal_cream         g_theme.base
 #define cal_hoverBg       g_theme.surface
+#define cal_cardBg        g_theme.surface
 
 #define cal_hover_darken(base, amount) cal_hover_adjust((base), (amount))
 

@@ -46,7 +46,7 @@ static void AboutPage_Render(uint32_t fontId) {
            }) {
         CLAY_TEXT(CLAY_STRING("<"), CLAY_TEXT_CONFIG({
                                         .fontId = fontId,
-                                        .fontSize = 18,
+                                        .fontSize = 20,
                                         .textColor = cal_primaryText,
                                     }));
       }
@@ -72,7 +72,7 @@ static void AboutPage_Render(uint32_t fontId) {
       CLAY_TEXT(CLAY_STRING("Fella Calendar"),
                 CLAY_TEXT_CONFIG({
                     .fontId = fontId,
-                    .fontSize = 18,
+                    .fontSize = 20,
                     .textColor = cal_primaryText,
                 }));
       CLAY_TEXT(

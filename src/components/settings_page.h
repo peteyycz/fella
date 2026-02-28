@@ -106,7 +106,7 @@ static void SettingsPage_Render(uint32_t fontId) {
           }) {
         CLAY_TEXT(CLAY_STRING("<"), CLAY_TEXT_CONFIG({
                                         .fontId = fontId,
-                                        .fontSize = 18,
+                                        .fontSize = 20,
                                         .textColor = cal_primaryText,
                                     }));
       }
@@ -134,7 +134,7 @@ static void SettingsPage_Render(uint32_t fontId) {
       CLAY_TEXT(CLAY_STRING("Theme"),
                 CLAY_TEXT_CONFIG({
                     .fontId = fontId,
-                    .fontSize = 18,
+                    .fontSize = 20,
                     .textColor = cal_primaryText,
                 }));
 
@@ -197,7 +197,7 @@ static void SettingsPage_Render(uint32_t fontId) {
       CLAY_TEXT(CLAY_STRING("Google Calendar"),
                 CLAY_TEXT_CONFIG({
                     .fontId = fontId,
-                    .fontSize = 18,
+                    .fontSize = 20,
                     .textColor = cal_primaryText,
                 }));
 
@@ -375,7 +375,7 @@ static void SettingsPage_Render(uint32_t fontId) {
           CLAY_TEXT(cal_make_string(g_authErrorMsg),
                     CLAY_TEXT_CONFIG({
                         .fontId = fontId,
-                        .fontSize = 13,
+                        .fontSize = 14,
                         .textColor = cal_secondaryText,
                         .wrapMode = CLAY_TEXT_WRAP_WORDS,
                     }));
